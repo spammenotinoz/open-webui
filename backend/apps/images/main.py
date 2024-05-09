@@ -318,9 +318,9 @@ class GenerateImageForm(BaseModel):
     prompt: str
     n: int = 1
     size: Optional[str] = None
-    negative_prompt: Optional[str] = None
-    sampler: Optional[str] = os.getenv('IMAGE_SAMPLER', default=None)
-    cfg: int = os.getenv('IMAGE_CFG', default=None)
+    negative_prompt: Optional[str] = os.getenv('IMAGE_NEGATIVE', default=None)
+    sampler_index: Optional[str] = os.getenv('IMAGE_SAMPLER', default=None)
+    cfg_scale: int = os.getenv('IMAGE_CFG', default=None)
 
 def save_b64_image(b64_str):
     try:

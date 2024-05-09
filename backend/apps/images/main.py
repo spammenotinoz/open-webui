@@ -313,14 +313,13 @@ def update_default_model(
 ):
     return set_model_handler(form_data.model)
 
-
 class GenerateImageForm(BaseModel):
     model: Optional[str] = None
     prompt: str
     n: int = 1
     size: Optional[str] = None
     negative_prompt: Optional[str] = None
-
+    sampler: Optional[str] = os.getenv('IMAGE_SAMPLER', default=None)
 
 def save_b64_image(b64_str):
     try:

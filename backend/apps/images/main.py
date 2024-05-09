@@ -320,7 +320,6 @@ class GenerateImageForm(BaseModel):
     size: Optional[str] = None
     negative_prompt: Optional[str] = None
     sampler: Optional[str] = os.getenv('IMAGE_SAMPLER', default=None)
-    cfg: int = os.getenv('IMAGE_CFG', default=None)
 
 def save_b64_image(b64_str):
     try:

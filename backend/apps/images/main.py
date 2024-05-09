@@ -319,10 +319,9 @@ class GenerateImageForm(BaseModel):
     prompt: str
     n: int = 1
     size: Optional[str] = None
-    negative_prompt: Optional[str] = os.getenv('IMAGE_NEGATIVE_PROMPT', default=None)
-    sampler_index: Optional[str] = os.getenv('IMAGE_SAMPLER', default=None)
-    cfg_scale: int = os.getenv('IMAGE_CFG', default=None)
-        
+    negative_prompt: Optional[str] = None
+
+
 def save_b64_image(b64_str):
     try:
         image_id = str(uuid.uuid4())
@@ -468,22 +467,13 @@ def generate_image(
         else:
             if form_data.model:
                 set_model_handler(form_data.model)
-                            
+
             data = {
                 "prompt": form_data.prompt,
                 "batch_size": form_data.n,
                 "width": width,
                 "height": height,
-                "negative_prompt" : negative_prompt,
-                "sampler_index" : sampler_index,
-                "cfg_scale" : cfg_scale,
             }
-
-            if app.state.CFG_SCALE != None:
-                data["steps"] = app.state.CFG_SCALE
-                
-            if app.state.SAMPLER_INDEX != None:
-                data["sampler_index"] = app.state.SAMPLER_INDEX
 
             if app.state.IMAGE_STEPS != None:
                 data["steps"] = app.state.IMAGE_STEPS

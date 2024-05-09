@@ -76,10 +76,6 @@ app.state.IMAGE_STEPS = IMAGE_STEPS
 
 app.state.AUTOMATIC1111_API_AUTH = os.getenv("AUTOMATIC1111_API_AUTH")
 
-app.state.negative_prompt = os.getenv("IMAGE_NEGATIVE_PROMPT")
-app.state.sampler_index = os.getenv("IMAGE_SAMPLER")
-app.state.cfg_scale = os.getenv("IMAGE_CFG")
-
 def get_automatic1111_session():
     session = requests.Session()
     if app.state.AUTOMATIC1111_API_AUTH:
@@ -323,10 +319,10 @@ class GenerateImageForm(BaseModel):
     prompt: str
     n: int = 1
     size: Optional[str] = None
-    negative_prompt: Optional[str] = None
-    sampler_index: Optional[str] = None
-    cfg_scale: Optional[int] = None
-    
+    negative_prompt: Optional[str] = os.getenv('IMAGE_NEGATIVE_PROMPT', default=None)
+    sampler_index: Optional[str] = os.getenv('IMAGE_SAMPLER', default=None)
+    cfg_scale: int = os.getenv('IMAGE_CFG', default=None)
+        
 def save_b64_image(b64_str):
     try:
         image_id = str(uuid.uuid4())
@@ -478,9 +474,9 @@ def generate_image(
                 "batch_size": form_data.n,
                 "width": width,
                 "height": height,
-                "negative_prompt": negative_prompt,
-                "sampler_index": sampler_index,
-                "cfg_scale": cfg_scale,
+                "negative_prompt" : negative_prompt,
+                "sampler_index" : sampler_index,
+                "cfg_scale" : cfg_scale,
             }
 
             if app.state.CFG_SCALE != None:
@@ -493,7 +489,7 @@ def generate_image(
                 data["steps"] = app.state.IMAGE_STEPS
 
             if form_data.negative_prompt != None:
-                data["negative_prompt"] = app.state.NEGATIVE_PROMPT
+                data["negative_prompt"] = form_data.negative_prompt
 
             session = get_automatic1111_session()
             r = session.post(

@@ -98,9 +98,6 @@
                                 {$i18n.t('Sign in')}
                                 {$i18n.t('to')}
                                 {$WEBUI_NAME}
-								<br>WARNING 18+ users only, may inadvertently generate NSWF images.
-								<br>Use the IMAGE generation feature at your own risk
-								<br<> 
                             </div>
                         </div>
 
@@ -139,6 +136,9 @@
                                 {$i18n.t('Sign in')}
                             </button>
 
+                            <div class=" mt-4 text-sm text-center">
+                                {$i18n.t("Don't have an account?")}
+                            </div>
                         </div>
                     </form>
                 </div>

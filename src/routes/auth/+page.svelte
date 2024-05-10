@@ -74,7 +74,7 @@
 					<form class="flex flex-col justify-center" on:submit|preventDefault={signInHandler}>
 						<div class="mb-1">
 							<div class="text-2xl font-bold">
-								{i18n.t('Sign in to')} {WEBUI_NAME} !! Warning may inadvertently create NSFW Pictures !!
+								{i18n.t('Sign in to')} {WEBUI_NAME}
 							</div>
 						</div>
 

@@ -242,7 +242,7 @@ async def get_models(user=Depends(get_current_user)):
         except Exception as e:
 
             log.exception(e)
-            error_detail = "Ultimate UI: Server Connection Error"
+            error_detail = "Smart Chat: Server Connection Error"
             if r is not None:
                 try:
                     res = r.json()
@@ -362,7 +362,7 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
             return response_data
     except Exception as e:
         log.exception(e)
-        error_detail = "Ultimate UI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()

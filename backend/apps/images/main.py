@@ -471,9 +471,9 @@ def generate_image(
             data = {
                 "prompt": form_data.prompt,
                 "batch_size": form_data.n,
+                "cfg_scale": 4,
                 "width": width,
                 "height": height,
-                "cfg_scale": os.getenv("IMAGE_CFG"),
             }
 
             if app.state.IMAGE_STEPS != None:

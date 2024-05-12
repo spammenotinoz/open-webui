@@ -402,7 +402,6 @@ def generate_image(
                 "model": app.state.MODEL if app.state.MODEL != "" else "dall-e-2",
                 "prompt": form_data.prompt,
                 "n": form_data.n,
-                "CFG_scale": "4",
                 "size": form_data.size if form_data.size else app.state.IMAGE_SIZE,
                 "response_format": "b64_json",
             }
@@ -474,6 +473,7 @@ def generate_image(
                 "batch_size": form_data.n,
                 "width": width,
                 "height": height,
+                "cfg_scale": os.getenv("IMAGE_CFG"),
             }
 
             if app.state.IMAGE_STEPS != None:

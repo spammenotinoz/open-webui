@@ -25,7 +25,7 @@
 	let showShareChatModal = false;
 	let showDownloadChatModal = false;
 
-	function handleNewConversation() {
+	function handleModelChange() {
 		initNewChat();
 	}
 </script>
@@ -36,7 +36,7 @@
 		<div class="flex items-center w-full max-w-full">
 			<div class="flex-1 overflow-hidden max-w-full">
 				{#if showModelSelector}
-					<ModelSelector bind:selectedModels showSetDefault={!shareEnabled} on:newConversation={handleNewConversation} />
+					<ModelSelector bind:selectedModels showSetDefault={!shareEnabled} on:change={handleModelChange} />
 				{/if}
 			</div>
 

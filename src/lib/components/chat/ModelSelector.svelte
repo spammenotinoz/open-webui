@@ -3,18 +3,18 @@
 
 	import { setDefaultModels } from '$lib/apis/configs';
 	import { models, showSettings, settings, user } from '$lib/stores';
-	import { onMount, tick, getContext, createEventDispatcher } from 'svelte';
+	import { onMount, tick, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Selector from './ModelSelector/Selector.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 
 	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 
 	export let selectedModels = [''];
 	export let disabled = false;
 
 	export let showSetDefault = true;
+	export let initNewChat: Function;
 
 	const saveDefaultModel = async () => {
 		const hasEmptyModel = selectedModels.filter((it) => it === '');
@@ -39,7 +39,7 @@
 	}
 
 	function handleModelChange() {
-		dispatch('newConversation');
+		initNewChat();
 	}
 </script>
 

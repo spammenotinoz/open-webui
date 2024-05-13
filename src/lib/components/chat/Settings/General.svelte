@@ -130,15 +130,15 @@
 </script>
 
 <div class="flex flex-col h-full justify-between text-sm">
-	<div class="  pr-1.5 overflow-y-scroll max-h-[22rem]">
-		<div class="">
-			<div class=" mb-1 text-sm font-medium">{$i18n.t('WebUI Settings')}</div>
+	<div class="pr-1.5 overflow-y-scroll max-h-[22rem]">
+		<div>
+			<div class="mb-1 text-sm font-medium">{$i18n.t('WebUI Settings')}</div>
 
 			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">{$i18n.t('Theme')}</div>
+				<div class="self-center text-xs font-medium">{$i18n.t('Theme')}</div>
 				<div class="flex items-center relative">
 					<select
-						class=" dark:bg-gray-900 w-fit pr-8 rounded py-2 px-2 text-xs bg-transparent outline-none text-right"
+						class="dark:bg-gray-900 w-fit pr-8 rounded py-2 px-2 text-xs bg-transparent outline-none text-right"
 						bind:value={selectedTheme}
 						placeholder="Select a theme"
 						on:change={() => themeChangeHandler(selectedTheme)}
@@ -153,11 +153,11 @@
 				</div>
 			</div>
 
-			<div class=" flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">{$i18n.t('Language')}</div>
+			<div class="flex w-full justify-between">
+				<div class="self-center text-xs font-medium">{$i18n.t('Language')}</div>
 				<div class="flex items-center relative">
 					<select
-						class=" dark:bg-gray-900 w-fit pr-8 rounded py-2 px-2 text-xs bg-transparent outline-none text-right"
+						class="dark:bg-gray-900 w-fit pr-8 rounded py-2 px-2 text-xs bg-transparent outline-none text-right"
 						bind:value={lang}
 						placeholder="Select a language"
 						on:change={(e) => {
@@ -172,8 +172,8 @@
 			</div>
 
 			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">{$i18n.t('Notifications')}</div>
+				<div class="py-0.5 flex w-full justify-between">
+					<div class="self-center text-xs font-medium">{$i18n.t('Notifications')}</div>
 
 					<button
 						class="p-1 px-3 text-xs flex rounded transition"
@@ -192,10 +192,10 @@
 			</div>
 		</div>
 
-		<hr class=" dark:border-gray-700 my-3" />
+		<hr class="dark:border-gray-700 my-3" />
 
 		<div>
-			<div class=" my-2.5 text-sm font-medium">{$i18n.t('System Prompt')}</div>
+			<div class="my-2.5 text-sm font-medium">{$i18n.t('System Prompt')}</div>
 			<textarea
 				bind:value={system}
 				class="w-full rounded-lg p-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none resize-none"
@@ -204,78 +204,79 @@
 		</div>
 
 		{#if $user.role === 'admin'}
-  <div class="mt-2 space-y-3 pr-1.5">
-    <div class="flex justify-between items-center text-sm">
-      <div class="  font-medium">{$i18n.t('Advanced Parameters')}</div>
-      <button
-        class=" text-xs font-medium text-gray-500"
-        type="button"
-        on:click={() => {
-          showAdvanced = !showAdvanced;
-        }}
-      >{showAdvanced ? $i18n.t('Hide') : $i18n.t('Show')}</button>
-    </div>
+			<div class="mt-2 space-y-3 pr-1.5">
+				<div class="flex justify-between items-center text-sm">
+					<div class="font-medium">{$i18n.t('Advanced Parameters')}</div>
+					<button
+						class="text-xs font-medium text-gray-500"
+						type="button"
+						on:click={() => {
+							showAdvanced = !showAdvanced;
+						}}
+					>{showAdvanced ? $i18n.t('Hide') : $i18n.t('Show')}</button>
+				</div>
 
-    {#if showAdvanced}
-      <AdvancedParams bind:options />
-      <hr class=" dark:border-gray-700" />
+				{#if showAdvanced}
+					<AdvancedParams bind:options />
+					<hr class="dark:border-gray-700" />
 
-      <div class=" py-1 w-full justify-between">
-        <div class="flex w-full justify-between">
-          <div class=" self-center text-xs font-medium">{$i18n.t('Keep Alive')}</div>
+					<div class="py-1 w-full justify-between">
+						<div class="flex w-full justify-between">
+							<div class="self-center text-xs font-medium">{$i18n.t('Keep Alive')}</div>
 
-          <button
-            class="p-1 px-3 text-xs flex rounded transition"
-            type="button"
-            on:click={() => {
-              keepAlive = keepAlive === null ? '5m' : null;
-            }}
-          >
-            {#if keepAlive === null}
-              <span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-            {:else}
-              <span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
-            {/if}
-          </button>
-        </div>
+							<button
+								class="p-1 px-3 text-xs flex rounded transition"
+								type="button"
+								on:click={() => {
+									keepAlive = keepAlive === null ? '5m' : null;
+								}}
+							>
+								{#if keepAlive === null}
+									<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
+								{:else}
+									<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
+								{/if}
+							</button>
+						</div>
 
-        {#if keepAlive !== null}
-          <div class="flex mt-1 space-x-2">
-            <input
-              class="w-full rounded py-1.5 px-4 text-sm dark:text-gray-300 dark:bg-gray-800 outline-none border border-gray-100 dark:border-gray-600"
-              type="text"
-              placeholder={$i18n.t("e.g. '30s','10m'. Valid time units are 's', 'm', 'h'.")}
-              bind:value={keepAlive}
-            />
-          </div>
-        {/if}
-      </div>
+						{#if keepAlive !== null}
+							<div class="flex mt-1 space-x-2">
+								<input
+									class="w-full rounded py-1.5 px-4 text-sm dark:text-gray-300 dark:bg-gray-800 outline-none border border-gray-100 dark:border-gray-600"
+									type="text"
+									placeholder={$i18n.t("e.g. '30s','10m'. Valid time units are 's', 'm', 'h'.")}
+									bind:value={keepAlive}
+								/>
+							</div>
+						{/if}
+					</div>
 
-      <div>
-        <div class=" py-1 flex w-full justify-between">
-          <div class=" self-center text-sm font-medium">{$i18n.t('Request Mode')}</div>
+					<div>
+						<div class="py-1 flex w-full justify-between">
+							<div class="self-center text-sm font-medium">{$i18n.t('Request Mode')}</div>
 
-          <button
-            class="p-1 px-3 text-xs flex rounded transition"
-            on:click={() => {
-              toggleRequestFormat();
-            }}
-          >
-            {#if requestFormat === ''}
-              <span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-            {:else if requestFormat === 'json'}
-              <span class="ml-2 self-center"> {$i18n.t('JSON')} </span>
-            {/if}
-          </button>
-        </div>
-      </div>
-    {/if}
-  </div>
-{/if}
+							<button
+								class="p-1 px-3 text-xs flex rounded transition"
+								on:click={() => {
+									toggleRequestFormat();
+								}}
+							>
+								{#if requestFormat === ''}
+									<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
+								{:else if requestFormat === 'json'}
+									<span class="ml-2 self-center"> {$i18n.t('JSON')} </span>
+								{/if}
+							</button>
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</div>
 
 	<div class="flex justify-end pt-3 text-sm font-medium">
 		<button
-			class="  px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-gray-100 transition rounded-lg"
+			class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-gray-100 transition rounded-lg"
 			on:click={() => {
 				saveSettings({
 					system: system !== '' ? system : undefined,

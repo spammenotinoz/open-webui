@@ -24,6 +24,12 @@
 
 	let showShareChatModal = false;
 	let showDownloadChatModal = false;
+
+	$: {
+		if (selectedModels) {
+			initNewChat();
+		}
+	}
 </script>
 
 <ShareChatModal bind:show={showShareChatModal} chatId={$chatId} />
@@ -32,7 +38,7 @@
 		<div class="flex items-center w-full max-w-full">
 			<div class="flex-1 overflow-hidden max-w-full">
 				{#if showModelSelector}
-					<ModelSelector bind:selectedModels showSetDefault={!shareEnabled} {initNewChat} />
+					<ModelSelector bind:selectedModels showSetDefault={!shareEnabled} />
 				{/if}
 			</div>
 

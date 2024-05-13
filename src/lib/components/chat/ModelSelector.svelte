@@ -14,6 +14,7 @@
 	export let disabled = false;
 
 	export let showSetDefault = true;
+	export let initNewChat: Function;
 
 	const saveDefaultModel = async () => {
 		const hasEmptyModel = selectedModels.filter((it) => it === '');
@@ -36,6 +37,10 @@
 			$models.map((m) => m.id).includes(model) ? model : ''
 		);
 	}
+
+	function handleModelChange() {
+		initNewChat();
+	}
 </script>
 
 <div class="flex flex-col mt-0.5 w-full">
@@ -53,6 +58,7 @@
 								info: model
 							}))}
 						bind:value={selectedModel}
+						on:change={handleModelChange}
 					/>
 				</div>
 			</div>

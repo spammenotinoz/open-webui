@@ -1,18 +1,20 @@
 <script>
 	import { v4 as uuidv4 } from 'uuid';
-	import { toast } from 'svelte-french-toast';
+	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 
-	import { onMount } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 	import { page } from '$app/stores';
 
-	import { settings, user, config, modelfiles, models } from '$lib/stores';
+	import { settings, user, config, modelfiles } from '$lib/stores';
 	import { splitStream } from '$lib/utils';
 
 	import { createModel } from '$lib/apis/ollama';
 	import { getModelfiles, updateModelfileByTagName } from '$lib/apis/modelfiles';
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
+
+	const i18n = getContext('i18n');
 
 	let loading = false;
 
@@ -88,9 +90,6 @@
 	};
 
 	const updateHandler = async () => {
-		const model = $models.find((model) => model.name === tagName) ?? false;
-		const external = model?.external ?? false;
-
 		loading = true;
 
 		if (Object.keys(categories).filter((category) => categories[category]).length == 0) {
@@ -105,68 +104,67 @@
 			content !== '' &&
 			Object.keys(categories).filter((category) => categories[category]).length > 0
 		) {
-			if(!external) {
-				const res = await createModel(localStorage.token, tagName, content);
-				if (res) {
-					const reader = res.body
-						.pipeThrough(new TextDecoderStream())
-						.pipeThrough(splitStream('\n'))
-						.getReader();
+			const res = await createModel(localStorage.token, tagName, content);
 
-					while (true) {
-						const { value, done } = await reader.read();
-						if (done) break;
+			if (res) {
+				const reader = res.body
+					.pipeThrough(new TextDecoderStream())
+					.pipeThrough(splitStream('\n'))
+					.getReader();
 
-						try {
-							let lines = value.split('\n');
+				while (true) {
+					const { value, done } = await reader.read();
+					if (done) break;
 
-							for (const line of lines) {
-								if (line !== '') {
-									console.log(line);
-									let data = JSON.parse(line);
-									console.log(data);
+					try {
+						let lines = value.split('\n');
 
-									if (data.error) {
-										throw data.error;
-									}
-									if (data.detail) {
-										throw data.detail;
-									}
+						for (const line of lines) {
+							if (line !== '') {
+								console.log(line);
+								let data = JSON.parse(line);
+								console.log(data);
 
-									if (data.status) {
-										if (
-											!data.digest &&
-											!data.status.includes('writing') &&
-											!data.status.includes('sha256')
-										) {
-											toast.success(data.status);
+								if (data.error) {
+									throw data.error;
+								}
+								if (data.detail) {
+									throw data.detail;
+								}
 
-											if (data.status === 'success') {
-												success = true;
-											}
-										} else {
-											if (data.digest) {
-												digest = data.digest;
+								if (data.status) {
+									if (
+										!data.digest &&
+										!data.status.includes('writing') &&
+										!data.status.includes('sha256')
+									) {
+										toast.success(data.status);
 
-												if (data.completed) {
-													pullProgress = Math.round((data.completed / data.total) * 1000) / 10;
-												} else {
-													pullProgress = 100;
-												}
+										if (data.status === 'success') {
+											success = true;
+										}
+									} else {
+										if (data.digest) {
+											digest = data.digest;
+
+											if (data.completed) {
+												pullProgress = Math.round((data.completed / data.total) * 1000) / 10;
+											} else {
+												pullProgress = 100;
 											}
 										}
 									}
 								}
 							}
-						} catch (error) {
-							console.log(error);
-							toast.error(error);
 						}
+					} catch (error) {
+						console.log(error);
+						toast.error(error);
 					}
 				}
 			}
 
-			if (success || external) {
+			if (success) {
 				await updateModelfile({
 					tagName: tagName,
 					imageUrl: imageUrl,
@@ -184,8 +182,8 @@
 	};
 </script>
 
-<div class="min-h-screen w-full flex justify-center dark:text-white">
-	<div class=" py-2.5 flex flex-col justify-between w-full">
+<div class="min-h-screen max-h-[100dvh] w-full flex justify-center dark:text-white">
+	<div class="flex flex-col justify-between w-full overflow-y-auto">
 		<div class="max-w-2xl mx-auto w-full px-3 md:px-0 my-10">
 			<input
 				bind:this={filesInputElement}
@@ -252,7 +250,7 @@
 				}}
 			/>
 
-			<div class=" text-2xl font-semibold mb-6">My Modelfiles</div>
+			<div class=" text-2xl font-semibold mb-6">{$i18n.t('My Modelfiles')}</div>
 
 			<button
 				class="flex space-x-1"
@@ -274,7 +272,7 @@
 						/>
 					</svg>
 				</div>
-				<div class=" self-center font-medium text-sm">Back</div>
+				<div class=" self-center font-medium text-sm">{$i18n.t('Back')}</div>
 			</button>
 			<hr class="my-3 dark:border-gray-700" />
 
@@ -321,12 +319,12 @@
 
 				<div class="my-2 flex space-x-2">
 					<div class="flex-1">
-						<div class=" text-sm font-semibold mb-2">Name*</div>
+						<div class=" text-sm font-semibold mb-2">{$i18n.t('Name')}*</div>
 
 						<div>
 							<input
 								class="px-3 py-1.5 text-sm w-full bg-transparent border dark:border-gray-600 outline-none rounded-lg"
-								placeholder="Name your modelfile"
+								placeholder={$i18n.t('Name your modelfile')}
 								bind:value={title}
 								required
 							/>
@@ -334,12 +332,12 @@
 					</div>
 
 					<div class="flex-1">
-						<div class=" text-sm font-semibold mb-2">Model Tag Name*</div>
+						<div class=" text-sm font-semibold mb-2">{$i18n.t('Model Tag Name')}*</div>
 
 						<div>
 							<input
 								class="px-3 py-1.5 text-sm w-full bg-transparent disabled:text-gray-500 border dark:border-gray-600 outline-none rounded-lg"
-								placeholder="Add a model tag name"
+								placeholder={$i18n.t('Add a model tag name')}
 								value={tagName}
 								disabled
 								required
@@ -349,12 +347,12 @@
 				</div>
 
 				<div class="my-2">
-					<div class=" text-sm font-semibold mb-2">Description*</div>
+					<div class=" text-sm font-semibold mb-2">{$i18n.t('Description')}*</div>
 
 					<div>
 						<input
 							class="px-3 py-1.5 text-sm w-full bg-transparent border dark:border-gray-600 outline-none rounded-lg"
-							placeholder="Add a short description about what this modelfile does"
+							placeholder={$i18n.t('Add a short description about what this modelfile does')}
 							bind:value={desc}
 							required
 						/>
@@ -363,13 +361,13 @@
 
 				<div class="my-2">
 					<div class="flex w-full justify-between">
-						<div class=" self-center text-sm font-semibold">Modelfile</div>
+						<div class=" self-center text-sm font-semibold">{$i18n.t('Modelfile')}</div>
 					</div>
 
 					<!-- <div class=" text-sm font-semibold mb-2"></div> -->
 
 					<div class="mt-2">
-						<div class=" text-xs font-semibold mb-2">Content*</div>
+						<div class=" text-xs font-semibold mb-2">{$i18n.t('Content')}*</div>
 
 						<div>
 							<textarea
@@ -385,7 +383,7 @@
 
 				<div class="my-2">
 					<div class="flex w-full justify-between mb-2">
-						<div class=" self-center text-sm font-semibold">Prompt suggestions</div>
+						<div class=" self-center text-sm font-semibold">{$i18n.t('Prompt suggestions')}</div>
 
 						<button
 							class="p-1 px-3 text-xs flex rounded transition"
@@ -413,7 +411,7 @@
 							<div class=" flex border dark:border-gray-600 rounded-lg">
 								<input
 									class="px-3 py-1.5 text-sm w-full bg-transparent outline-none border-r dark:border-gray-600"
-									placeholder="Write a prompt suggestion (e.g. Who are you?)"
+									placeholder={$i18n.t('Write a prompt suggestion (e.g. Who are you?)')}
 									bind:value={prompt.content}
 								/>
 
@@ -442,7 +440,7 @@
 				</div>
 
 				<div class="my-2">
-					<div class=" text-sm font-semibold mb-2">Categories</div>
+					<div class=" text-sm font-semibold mb-2">{$i18n.t('Categories')}</div>
 
 					<div class="grid grid-cols-4">
 						{#each Object.keys(categories) as category}
@@ -457,7 +455,7 @@
 
 				{#if pullProgress !== null}
 					<div class="my-2">
-						<div class=" text-sm font-semibold mb-2">Pull Progress</div>
+						<div class=" text-sm font-semibold mb-2">{$i18n.t('Pull Progress')}</div>
 						<div class="w-full rounded-full dark:bg-gray-800">
 							<div
 								class="dark:bg-gray-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
@@ -480,7 +478,7 @@
 						type="submit"
 						disabled={loading}
 					>
-						<div class=" self-center font-medium">Save & Update</div>
+						<div class=" self-center font-medium">{$i18n.t('Save & Update')}</div>
 
 						{#if loading}
 							<div class="ml-1.5 self-center">

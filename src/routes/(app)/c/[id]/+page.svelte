@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { v4 as uuidv4 } from 'uuid';
-	import toast from 'svelte-sonner';
+	import toast from 'svelte-french-toast';
 
 	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';

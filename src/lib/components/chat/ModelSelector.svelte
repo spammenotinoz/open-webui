@@ -3,13 +3,12 @@
 
 	import { setDefaultModels } from '$lib/apis/configs';
 	import { models, showSettings, settings, user } from '$lib/stores';
-	import { onMount, tick, getContext, createEventDispatcher } from 'svelte';
+	import { onMount, tick, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Selector from './ModelSelector/Selector.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 
 	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 
 	export let selectedModels = [''];
 	export let disabled = false;
@@ -37,10 +36,6 @@
 			$models.map((m) => m.id).includes(model) ? model : ''
 		);
 	}
-
-	function handleModelChange() {
-		dispatch('change');
-	}
 </script>
 
 <div class="flex flex-col mt-0.5 w-full">
@@ -58,10 +53,13 @@
 								info: model
 							}))}
 						bind:value={selectedModel}
-						on:change={handleModelChange}
 					/>
 				</div>
 			</div>
+
+
+
+			
 		</div>
 	{/each}
 </div>

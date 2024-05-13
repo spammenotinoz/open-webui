@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { v4 as uuidv4 } from 'uuid';
-	import toast from 'svelte-sonner';
+	import toast from 'svelte-french-toast';
 
 	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -18,7 +18,7 @@
 	} from '$lib/stores';
 	import { copyToClipboard, splitStream } from '$lib/utils';
 
-	import { generateChatCompletion, cancelOllamaRequest, generateTitle } from '$lib/apis/ollama';
+	import { generateChatCompletion, cancelChatCompletion, generateTitle } from '$lib/apis/ollama';
 	import {
 		addTagById,
 		createNewChat,
@@ -99,7 +99,7 @@
 
 	const initNewChat = async () => {
 		if (currentRequestId !== null) {
-			await cancelOllamaRequest(localStorage.token, currentRequestId);
+			await cancelChatCompletion(localStorage.token, currentRequestId);
 			currentRequestId = null;
 		}
 
@@ -377,7 +377,7 @@
 
 					if (stopResponseFlag) {
 						controller.abort('User: Stop Response');
-						await cancelOllamaRequest(localStorage.token, currentRequestId);
+						await cancelChatCompletion(localStorage.token, currentRequestId);
 					}
 
 					currentRequestId = null;

@@ -39,7 +39,7 @@
 	}
 
 	function handleModelChange() {
-		dispatch('change');
+		dispatch('newConversation');
 	}
 </script>
 

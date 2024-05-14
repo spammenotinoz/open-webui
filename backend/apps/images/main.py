@@ -473,7 +473,7 @@ def generate_image(
                 "batch_size": form_data.n,
                 "cfg_scale": 4,
                 "negative_prompt": "text, logo, ugly, soft, blurry, out of focus, low quality, garish, distorted, disfigured",
-                "save_images": "true",
+                "save_images": true,
                 "width": width,
                 "height": height,
             }

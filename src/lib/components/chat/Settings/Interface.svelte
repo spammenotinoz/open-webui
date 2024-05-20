@@ -22,6 +22,8 @@
 	// Interface
 	let promptSuggestions = [];
 	let showUsername = false;
+	let chatBubble = true;
+	let chatDirection: 'LTR' | 'RTL' = 'LTR';
 
 	const toggleSplitLargeChunks = async () => {
 		splitLargeChunks = !splitLargeChunks;
@@ -31,6 +33,11 @@
 	const toggleFullScreenMode = async () => {
 		fullScreenMode = !fullScreenMode;
 		saveSettings({ fullScreenMode: fullScreenMode });
+	};
+
+	const toggleChatBubble = async () => {
+		chatBubble = !chatBubble;
+		saveSettings({ chatBubble: chatBubble });
 	};
 
 	const toggleShowUsername = async () => {
@@ -70,6 +77,11 @@
 		}
 	};
 
+	const toggleChangeChatDirection = async () => {
+		chatDirection = chatDirection === 'LTR' ? 'RTL' : 'LTR';
+		saveSettings({ chatDirection });
+	};
+
 	const updateInterfaceHandler = async () => {
 		if ($user.role === 'admin') {
 			promptSuggestions = await setDefaultPromptSuggestions(localStorage.token, promptSuggestions);
@@ -105,8 +117,10 @@
 
 		responseAutoCopy = settings.responseAutoCopy ?? false;
 		showUsername = settings.showUsername ?? false;
+		chatBubble = settings.chatBubble ?? true;
 		fullScreenMode = settings.fullScreenMode ?? false;
 		splitLargeChunks = settings.splitLargeChunks ?? false;
+		chatDirection = settings.chatDirection ?? 'LTR';
 	});
 </script>
 
@@ -117,9 +131,29 @@
 		dispatch('save');
 	}}
 >
-	<div class=" space-y-3 pr-1.5 overflow-y-scroll max-h-[22rem]">
+	<div class=" space-y-3 pr-1.5 overflow-y-scroll max-h-[25rem]">
 		<div>
 			<div class=" mb-1 text-sm font-medium">{$i18n.t('WebUI Add-ons')}</div>
+
+			<div>
+				<div class=" py-0.5 flex w-full justify-between">
+					<div class=" self-center text-xs font-medium">{$i18n.t('Chat Bubble UI')}</div>
+
+					<button
+						class="p-1 px-3 text-xs flex rounded transition"
+						on:click={() => {
+							toggleChatBubble();
+						}}
+						type="button"
+					>
+						{#if chatBubble === true}
+							<span class="ml-2 self-center">{$i18n.t('On')}</span>
+						{:else}
+							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+						{/if}
+					</button>
+				</div>
+			</div>
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
@@ -183,27 +217,29 @@
 				</div>
 			</div>
 
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">
-						{$i18n.t('Display the username instead of You in the Chat')}
-					</div>
+			{#if !$settings.chatBubble}
+				<div>
+					<div class=" py-0.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">
+							{$i18n.t('Display the username instead of You in the Chat')}
+						</div>
 
-					<button
-						class="p-1 px-3 text-xs flex rounded transition"
-						on:click={() => {
-							toggleShowUsername();
-						}}
-						type="button"
-					>
-						{#if showUsername === true}
-							<span class="ml-2 self-center">{$i18n.t('On')}</span>
-						{:else}
-							<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-						{/if}
-					</button>
+						<button
+							class="p-1 px-3 text-xs flex rounded transition"
+							on:click={() => {
+								toggleShowUsername();
+							}}
+							type="button"
+						>
+							{#if showUsername === true}
+								<span class="ml-2 self-center">{$i18n.t('On')}</span>
+							{:else}
+								<span class="ml-2 self-center">{$i18n.t('Off')}</span>
+							{/if}
+						</button>
+					</div>
 				</div>
-			</div>
+			{/if}
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
@@ -228,12 +264,80 @@
 			</div>
 		</div>
 
-		<hr class=" dark:border-gray-700" />	
+		<div>
+			<div class=" py-0.5 flex w-full justify-between">
+				<div class=" self-center text-xs font-medium">{$i18n.t('Chat direction')}</div>
+
+				<button
+					class="p-1 px-3 text-xs flex rounded transition"
+					on:click={toggleChangeChatDirection}
+					type="button"
+				>
+					{#if chatDirection === 'LTR'}
+						<span class="ml-2 self-center">{$i18n.t('LTR')}</span>
+					{:else}
+						<span class="ml-2 self-center">{$i18n.t('RTL')}</span>
+					{/if}
+				</button>
+			</div>
+		</div>
+
+		<hr class=" dark:border-gray-700" />
+
+		<div>
+			<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Title Auto-Generation Model')}</div>
+			<div class="flex w-full gap-2 pr-2">
+				<div class="flex-1">
+					<div class=" text-xs mb-1">Local Models</div>
+					<select
+						class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none"
+						bind:value={titleAutoGenerateModel}
+						placeholder={$i18n.t('Select a model')}
+					>
+						<option value="" selected>{$i18n.t('Current Model')}</option>
+						{#each $models as model}
+							{#if model.size != null}
+								<option value={model.name} class="bg-gray-100 dark:bg-gray-700">
+									{model.name + ' (' + (model.size / 1024 ** 3).toFixed(1) + ' GB)'}
+								</option>
+							{/if}
+						{/each}
+					</select>
+				</div>
+
+				<div class="flex-1">
+					<div class=" text-xs mb-1">External Models</div>
+					<select
+						class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none"
+						bind:value={titleAutoGenerateModelExternal}
+						placeholder={$i18n.t('Select a model')}
+					>
+						<option value="" selected>{$i18n.t('Current Model')}</option>
+						{#each $models as model}
+							{#if model.name !== 'hr'}
+								<option value={model.name} class="bg-gray-100 dark:bg-gray-700">
+									{model.name}
+								</option>
+							{/if}
+						{/each}
+					</select>
+				</div>
+			</div>
+
+			<div class="mt-3 mr-2">
+				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Title Generation Prompt')}</div>
+				<textarea
+					bind:value={titleGenerationPrompt}
+					class="w-full rounded-lg p-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none resize-none"
+					rows="3"
+				/>
+			</div>
+		</div>
 
 		{#if $user.role === 'admin'}
 			<hr class=" dark:border-gray-700" />
 
-			<div class=" space-y-3 pr-1.5 overflow-y-scroll max-h-80">
+			<div class=" space-y-3 pr-1.5">
 				<div class="flex w-full justify-between mb-2">
 					<div class=" self-center text-sm font-semibold">
 						{$i18n.t('Default Prompt Suggestions')}

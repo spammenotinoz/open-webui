@@ -2,7 +2,7 @@
 	import { Collapsible } from 'bits-ui';
 
 	import { setDefaultModels } from '$lib/apis/configs';
-	import { models, showSettings, settings, user } from '$lib/stores';
+	import { models, showSettings, settings, user, mobile } from '$lib/stores';
 	import { onMount, tick, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Selector from './ModelSelector/Selector.svelte';
@@ -38,7 +38,7 @@
 	}
 </script>
 
-<div class="flex flex-col mt-0.5 w-full">
+<div class="flex flex-col w-full items-center md:items-start">
 	{#each selectedModels as selectedModel, selectedModelIdx}
 		<div class="flex w-full max-w-fit">
 			<div class="overflow-hidden w-full">
@@ -55,9 +55,8 @@
 						bind:value={selectedModel}
 					/>
 				</div>
-			</div>
-
-
+			</div>	
 		</div>
 	{/each}
 </div>
+

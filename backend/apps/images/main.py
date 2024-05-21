@@ -486,6 +486,9 @@ def generate_image(
             data = {
                 "prompt": form_data.prompt,
                 "batch_size": form_data.n,
+                "cfg_scale": 4,
+                "negative_prompt": "text, logo, ugly, watermark, soft, blurry, out of focus, low quality, garish, distorted, disfigured",
+                "save_images": "true",
                 "width": width,
                 "height": height,
             }

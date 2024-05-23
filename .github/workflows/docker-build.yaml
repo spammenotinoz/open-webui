@@ -7,7 +7,6 @@ on:
       - main
       - dev
       - staging     
-
     tags:
       - v*
 

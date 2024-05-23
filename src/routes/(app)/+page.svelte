@@ -1,112 +1,114 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { v4 as uuidv4 } from 'uuid';
+    import { toast } from 'svelte-sonner';
+    import { v4 as uuidv4 } from 'uuid';
 
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { getContext, onMount, tick } from 'svelte';
+    import { goto } from '$app/navigation';
+    import { page } from '$app/stores';
+    import { getContext, onMount, tick } from 'svelte';
 
-	import {
-		WEBUI_NAME,
-		tags as _tags,
-		chatId,
-		chats,
-		config,
-		modelfiles,
-		models,
-		settings,
-		showSidebar,
-		user
-	} from '$lib/stores';
-	import { copyToClipboard, splitStream } from '$lib/utils';
+    import {
+        WEBUI_NAME,
+        tags as _tags,
+        chatId,
+        chats,
+        config,
+        modelfiles,
+        models,
+        settings,
+        showSidebar,
+        user
+    } from '$lib/stores';
+    import { copyToClipboard, splitStream } from '$lib/utils';
 
-	import {
-		addTagById,
-		createNewChat,
-		deleteTagById,
-		getAllChatTags,
-		getChatList,
-		getTagsById,
-		updateChatById
-	} from '$lib/apis/chats';
-	import { cancelOllamaRequest, generateChatCompletion } from '$lib/apis/ollama';
-	import { generateOpenAIChatCompletion, generateTitle } from '$lib/apis/openai';
-	import { queryCollection, queryDoc } from '$lib/apis/rag';
+    import {
+        addTagById,
+        createNewChat,
+        deleteTagById,
+        getAllChatTags,
+        getChatList,
+        getTagsById,
+        updateChatById
+    } from '$lib/apis/chats';
+    import { cancelOllamaRequest, generateChatCompletion } from '$lib/apis/ollama';
+    import { generateOpenAIChatCompletion, generateTitle } from '$lib/apis/openai';
+    import { queryCollection, queryDoc } from '$lib/apis/rag';
 
-	import { queryMemory } from '$lib/apis/memories';
-	import { createOpenAITextStream } from '$lib/apis/streaming';
-	import MessageInput from '$lib/components/chat/MessageInput.svelte';
-	import Messages from '$lib/components/chat/Messages.svelte';
-	import ModelSelector from '$lib/components/chat/ModelSelector.svelte';
-	import Navbar from '$lib/components/layout/Navbar.svelte';
-	import {
-		LITELLM_API_BASE_URL,
-		OLLAMA_API_BASE_URL,
-		OPENAI_API_BASE_URL,
-		WEBUI_BASE_URL
-	} from '$lib/constants';
-	import { RAGTemplate } from '$lib/utils/rag';
+    import { queryMemory } from '$lib/apis/memories';
+    import { createOpenAITextStream } from '$lib/apis/streaming';
+    import MessageInput from '$lib/components/chat/MessageInput.svelte';
+    import Messages from '$lib/components/chat/Messages.svelte';
+    import ModelSelector from '$lib/components/chat/ModelSelector.svelte';
+    import Navbar from '$lib/components/layout/Navbar.svelte';
+    import {
+        LITELLM_API_BASE_URL,
+        OLLAMA_API_BASE_URL,
+        OPENAI_API_BASE_URL,
+        WEBUI_BASE_URL
+    } from '$lib/constants';
+    import { RAGTemplate } from '$lib/utils/rag';
 
-	const i18n = getContext('i18n');
+    const i18n = getContext('i18n');
 
-	let stopResponseFlag = false;
-	let autoScroll = true;
-	let processing = '';
-	let messagesContainerElement: HTMLDivElement;
-	let currentRequestId = null;
+    let stopResponseFlag = false;
+    let autoScroll = true;
+    let processing = '';
+    let messagesContainerElement: HTMLDivElement;
+    let currentRequestId = null;
 
-	let showModelSelector = true;
+    let showModelSelector = true;
 
-	let selectedModels = [''];
-	let atSelectedModel = '';
+    let selectedModels = [''];
+    let atSelectedModel = '';
 
-	let selectedModelfile = null;
-	$: selectedModelfile =
-		selectedModels.length === 1 &&
-		$modelfiles.filter((modelfile) => modelfile.tagName === selectedModels[0]).length > 0
-			? $modelfiles.filter((modelfile) => modelfile.tagName === selectedModels[0])[0]
-			: null;
+    let selectedModelfile = null;
+    $: selectedModelfile =
+        selectedModels.length === 1 &&
+        $modelfiles.filter((modelfile) => modelfile.tagName === selectedModels[0]).length > 0
+            ? $modelfiles.filter((modelfile) => modelfile.tagName === selectedModels[0])[0]
+            : null;
 
-	let selectedModelfiles = {};
-	$: selectedModelfiles = selectedModels.reduce((a, tagName, i, arr) => {
-		const modelfile =
-			$modelfiles.filter((modelfile) => modelfile.tagName === tagName)?.at(0) ?? undefined;
+    let selectedModelfiles = {};
+    $: selectedModelfiles = selectedModels.reduce((a, tagName, i, arr) => {
+        const modelfile =
+            $modelfiles.filter((modelfile) => modelfile.tagName === tagName)?.at(0) ?? undefined;
 
-		return {
-			...a,
-			...(modelfile && { [tagName]: modelfile })
-		};
-	}, {});
+        return {
+            ...a,
+            ...(modelfile && { [tagName]: modelfile })
+        };
+    }, {});
 
-	let chat = null;
-	let tags = [];
+    let chat = null;
+    let tags = [];
 
-	let title = '';
-	let prompt = '';
-	let files = [];
-	let messages = [];
-	let history = {
-		messages: {},
-		currentId: null
-	};
+    let title = '';
+    let prompt = '';
+    let files = [];
+    let messages = [];
+    let history = {
+        messages: {},
+        currentId: null
+    };
 
-	$: if (history.currentId !== null) {
-		let _messages = [];
+    const MAX_MESSAGES = parseInt(process.env.MAX_MESSAGES); // Get the maximum number of messages from the environment variable
 
-		let currentMessage = history.messages[history.currentId];
-		while (currentMessage !== null) {
-			_messages.unshift({ ...currentMessage });
-			currentMessage =
-				currentMessage.parentId !== null ? history.messages[currentMessage.parentId] : null;
-		}
-		messages = _messages;
-	} else {
-		messages = [];
-	}
+    $: if (history.currentId !== null) {
+        let _messages = [];
 
-	onMount(async () => {
-		await initNewChat();
-	});
+        let currentMessage = history.messages[history.currentId];
+        while (currentMessage !== null) {
+            _messages.unshift({ ...currentMessage });
+            currentMessage =
+                currentMessage.parentId !== null ? history.messages[currentMessage.parentId] : null;
+        }
+        messages = _messages.slice(-MAX_MESSAGES); // Retain only the last n messages
+    } else {
+        messages = [];
+    }
+
+    onMount(async () => {
+        await initNewChat();
+    });
 
 	//////////////////////////
 	// Web functions

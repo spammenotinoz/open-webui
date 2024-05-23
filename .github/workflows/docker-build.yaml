@@ -6,7 +6,7 @@ on:
     branches:
       - main
       - dev
-      - staging     
+      - staging
     tags:
       - v*
 
@@ -64,16 +64,6 @@ jobs:
           flavor: |
             latest=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Extract metadata for Docker cache
-        id: cache-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.FULL_IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-          flavor: |
-            prefix=cache-${{ matrix.platform }}-
-
       - name: Build Docker image (latest)
         uses: docker/build-push-action@v5
         id: build
@@ -83,8 +73,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.FULL_IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=registry,ref=${{ steps.cache-meta.outputs.tags }}
-          cache-to: type=registry,ref=${{ steps.cache-meta.outputs.tags }},mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Export digest
         run: |
@@ -134,7 +124,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Docker images (cuda tag)
+      - name: Extract metadata for Docker images (default latest tag)
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -150,16 +140,6 @@ jobs:
             latest=${{ github.ref == 'refs/heads/main' }}
             suffix=-cuda,onlatest=true
 
-      - name: Extract metadata for Docker cache
-        id: cache-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.FULL_IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-          flavor: |
-            prefix=cache-cuda-${{ matrix.platform }}-
-
       - name: Build Docker image (cuda)
         uses: docker/build-push-action@v5
         id: build
@@ -169,8 +149,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.FULL_IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=registry,ref=${{ steps.cache-meta.outputs.tags }}
-          cache-to: type=registry,ref=${{ steps.cache-meta.outputs.tags }},mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: USE_CUDA=true
 
       - name: Export digest
@@ -237,16 +217,6 @@ jobs:
             latest=${{ github.ref == 'refs/heads/main' }}
             suffix=-ollama,onlatest=true
 
-      - name: Extract metadata for Docker cache
-        id: cache-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.FULL_IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-          flavor: |
-            prefix=cache-ollama-${{ matrix.platform }}-
-
       - name: Build Docker image (ollama)
         uses: docker/build-push-action@v5
         id: build
@@ -256,8 +226,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.FULL_IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=registry,ref=${{ steps.cache-meta.outputs.tags }}
-          cache-to: type=registry,ref=${{ steps.cache-meta.outputs.tags }},mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: USE_OLLAMA=true
 
       - name: Export digest

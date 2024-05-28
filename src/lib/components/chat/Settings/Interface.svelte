@@ -4,7 +4,6 @@
 	import { config, models, settings, user } from '$lib/stores';
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	const dispatch = createEventDispatcher();
 
 	const i18n = getContext('i18n');
@@ -105,18 +104,23 @@
 			promptSuggestions = $config?.default_prompt_suggestions;
 		}
 
-		titleAutoGenerate = $settings?.title?.auto ?? true;
-		titleAutoGenerateModel = $settings?.title?.model ?? '';
-		titleAutoGenerateModelExternal = $settings?.title?.modelExternal ?? '';
+		let settings = JSON.parse(localStorage.getItem('settings') ?? '{}');
+
+		titleAutoGenerate = settings?.title?.auto ?? true;
+		titleAutoGenerateModel = settings?.title?.model ?? '';
+		titleAutoGenerateModelExternal = settings?.title?.modelExternal ?? '';
 		titleGenerationPrompt =
-			$settings?.title?.prompt ??
-			`Create a concise, 3-5 word phrase as a header for the following query, strictly adhering to the 3-5 word limit and avoiding the use of the word 'title': {{prompt}}`;
-		responseAutoCopy = $settings.responseAutoCopy ?? false;
-		showUsername = $settings.showUsername ?? false;
-		chatBubble = $settings.chatBubble ?? true;
-		fullScreenMode = $settings.fullScreenMode ?? false;
-		splitLargeChunks = $settings.splitLargeChunks ?? false;
-		chatDirection = $settings.chatDirection ?? 'LTR';
+			settings?.title?.prompt ??
+			$i18n.t(
+				"Create a concise, 3-5 word phrase as a header for the following query, strictly adhering to the 3-5 word limit and avoiding the use of the word 'title':"
+			) + ' {{prompt}}';
+
+		responseAutoCopy = settings.responseAutoCopy ?? false;
+		showUsername = settings.showUsername ?? false;
+		chatBubble = settings.chatBubble ?? true;
+		fullScreenMode = settings.fullScreenMode ?? false;
+		splitLargeChunks = settings.splitLargeChunks ?? false;
+		chatDirection = settings.chatDirection ?? 'LTR';
 	});
 </script>
 
@@ -129,7 +133,7 @@
 >
 	<div class=" space-y-3 pr-1.5 overflow-y-scroll max-h-[25rem]">
 		<div>
-			<div class=" mb-1 text-sm font-medium">{$i18n.t('WebUI Add-ons')}</div>
+			<div class=" mb-1 text-sm font-medium">Add-ons</div>
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
@@ -279,78 +283,6 @@
 		</div>
 
 		<hr class=" dark:border-gray-700" />
-
-		<div>
-			<div class=" mb-2.5 text-sm font-medium flex">
-				<div class=" mr-1">{$i18n.t('Set Task Model')}</div>
-				<Tooltip
-					content={$i18n.t(
-						'A task model is used when performing tasks such as generating titles for chats and web search queries'
-					)}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke-width="1.5"
-						stroke="currentColor"
-						class="w-5 h-5"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
-						/>
-					</svg>
-				</Tooltip>
-			</div>
-			<div class="flex w-full gap-2 pr-2">
-				<div class="flex-1">
-					<div class=" text-xs mb-1">Local Models</div>
-					<select
-						class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none"
-						bind:value={titleAutoGenerateModel}
-						placeholder={$i18n.t('Select a model')}
-					>
-						<option value="" selected>{$i18n.t('Current Model')}</option>
-						{#each $models as model}
-							{#if model.size != null}
-								<option value={model.name} class="bg-gray-100 dark:bg-gray-700">
-									{model.name + ' (' + (model.size / 1024 ** 3).toFixed(1) + ' GB)'}
-								</option>
-							{/if}
-						{/each}
-					</select>
-				</div>
-
-				<div class="flex-1">
-					<div class=" text-xs mb-1">External Models</div>
-					<select
-						class="w-full rounded-lg py-2 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none"
-						bind:value={titleAutoGenerateModelExternal}
-						placeholder={$i18n.t('Select a model')}
-					>
-						<option value="" selected>{$i18n.t('Current Model')}</option>
-						{#each $models as model}
-							{#if model.name !== 'hr'}
-								<option value={model.name} class="bg-gray-100 dark:bg-gray-700">
-									{model.name}
-								</option>
-							{/if}
-						{/each}
-					</select>
-				</div>
-			</div>
-
-			<div class="mt-3 mr-2">
-				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Title Generation Prompt')}</div>
-				<textarea
-					bind:value={titleGenerationPrompt}
-					class="w-full rounded-lg p-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none resize-none"
-					rows="3"
-				/>
-			</div>
-		</div>
 
 		{#if $user.role === 'admin'}
 			<hr class=" dark:border-gray-700" />

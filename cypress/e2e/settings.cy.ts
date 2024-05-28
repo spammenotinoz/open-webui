@@ -75,10 +75,5 @@ describe('Settings', () => {
 			cy.get('button').contains('Save').click();
 		});
 	});
-
-	context('About', () => {
-		it('user can open the About modal', () => {
-			cy.get('button').contains('About').click();
-		});
-	});
+	
 });

@@ -226,7 +226,7 @@ async def get_ollama_tags(
             return r.json()
         except Exception as e:
             log.exception(e)
-            error_detail = "Open WebUI: Server Connection Error"
+            error_detail = "Smart Chat: Server Connection Error"
             if r is not None:
                 try:
                     res = r.json()
@@ -277,7 +277,7 @@ async def get_ollama_versions(url_idx: Optional[int] = None):
             return r.json()
         except Exception as e:
             log.exception(e)
-            error_detail = "Open WebUI: Server Connection Error"
+            error_detail = "Smart Chat: Server Connection Error"
             if r is not None:
                 try:
                     res = r.json()
@@ -355,7 +355,7 @@ async def pull_model(
 
     except Exception as e:
         log.exception(e)
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -426,7 +426,7 @@ async def push_model(
         return await run_in_threadpool(get_request)
     except Exception as e:
         log.exception(e)
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -491,7 +491,7 @@ async def create_model(
         return await run_in_threadpool(get_request)
     except Exception as e:
         log.exception(e)
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -543,7 +543,7 @@ async def copy_model(
         return True
     except Exception as e:
         log.exception(e)
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -590,7 +590,7 @@ async def delete_model(
         return True
     except Exception as e:
         log.exception(e)
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -628,7 +628,7 @@ async def show_model_info(form_data: ModelNameForm, user=Depends(get_verified_us
         return r.json()
     except Exception as e:
         log.exception(e)
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -685,7 +685,7 @@ async def generate_embeddings(
         return r.json()
     except Exception as e:
         log.exception(e)
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -742,7 +742,7 @@ def generate_ollama_embeddings(
             raise "Something went wrong :/"
     except Exception as e:
         log.exception(e)
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -840,7 +840,7 @@ async def generate_completion(
     try:
         return await run_in_threadpool(get_request)
     except Exception as e:
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -1025,7 +1025,7 @@ async def generate_chat_completion(
     try:
         return await run_in_threadpool(get_request)
     except Exception as e:
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -1177,7 +1177,7 @@ async def generate_openai_chat_completion(
     try:
         return await run_in_threadpool(get_request)
     except Exception as e:
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()
@@ -1247,7 +1247,7 @@ async def get_openai_models(
 
         except Exception as e:
             log.exception(e)
-            error_detail = "Open WebUI: Server Connection Error"
+            error_detail = "Smart Chat: Server Connection Error"
             if r is not None:
                 try:
                     res = r.json()
@@ -1559,7 +1559,7 @@ async def deprecated_proxy(
     try:
         return await run_in_threadpool(get_request)
     except Exception as e:
-        error_detail = "Open WebUI: Server Connection Error"
+        error_detail = "Smart Chat: Server Connection Error"
         if r is not None:
             try:
                 res = r.json()

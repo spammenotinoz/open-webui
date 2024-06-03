@@ -59,7 +59,7 @@
 					{#if models[selectedModelIdx]?.info}
 						{models[selectedModelIdx]?.info?.name}
 					{:else}
-						{$i18n.t('Hello, '}
+						{$i18n.t('Hello, ')}
 					{/if}
 				</div>
 

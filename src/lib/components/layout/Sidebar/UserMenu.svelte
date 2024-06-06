@@ -157,15 +157,7 @@
 								<span class="relative inline-flex rounded-full size-2 bg-green-500" />
 							</span>
 						</div>
-
-						<div class=" ">
-							<span class=" font-medium">
-								{$i18n.t('Active Users')}:
-							</span>
-							<span class=" font-semibold">
-								{$activeUserCount}
-							</span>
-						</div>
+						
 					</div>
 				</Tooltip>
 			{/if}

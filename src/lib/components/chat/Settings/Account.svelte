@@ -234,8 +234,8 @@
 			<UpdatePassword />
 		</div>
 
-		<hr class=" dark:border-gray-700 my-4" />
-<!-- HIDE API KEYS
+		<hr class=" dark:border-gray-850 my-4" />
+
 		<div class="flex justify-between items-center text-sm">
 			<div class="  font-medium">{$i18n.t('API keys')}</div>
 			<button
@@ -245,7 +245,7 @@
 					showAPIKeys = !showAPIKeys;
 				}}>{showAPIKeys ? $i18n.t('Hide') : $i18n.t('Show')}</button
 			>
-		</div> -->
+		</div>
 
 		{#if showAPIKeys}
 			<div class="flex flex-col gap-4">
@@ -447,7 +447,7 @@
 								{/if}
 							</button>
 
-							<Tooltip content="Create new key">
+							<Tooltip content={$i18n.t('Create new key')}>
 								<button
 									class=" px-1.5 py-1 dark:hover:bg-gray-850transition rounded-lg"
 									on:click={() => {
@@ -479,7 +479,7 @@
 							>
 								<Plus strokeWidth="2" className=" size-3.5" />
 
-								Create new secret key</button
+								{$i18n.t('Create new secret key')}</button
 							>
 						{/if}
 					</div>

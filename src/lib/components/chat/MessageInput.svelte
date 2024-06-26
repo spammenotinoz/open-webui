@@ -219,8 +219,6 @@
             if (['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(file['type'])) {
               if (visionCapableModels.length === 0) {
                 // Remove all images from the conversation history
-				inputFiles = null;
-				filesInputElement.value = '';
                 files = files.filter(f => f.type !== 'image');
                 return;
               }

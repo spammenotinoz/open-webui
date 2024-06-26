@@ -79,6 +79,10 @@
 		}
 	}
 
+	$: if (visionCapableModels.length === 0) {
+	files = files.filter(f => f.type !== 'image');
+	}
+
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
 		element.scrollTop = element.scrollHeight;

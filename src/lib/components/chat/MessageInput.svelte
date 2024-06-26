@@ -408,7 +408,6 @@
 							_inputFiles.forEach((file) => {
 								if (['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(file['type'])) {
 									if (visionCapableModels.length === 0) {
-										toast.error($i18n.t('Selected model(s) do not support image inputs'));
 										inputFiles = null;
 										filesInputElement.value = '';
 										return;

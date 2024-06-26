@@ -210,13 +210,15 @@
 				const inputFiles = Array.from(e.dataTransfer?.files);
 
 				if (inputFiles && inputFiles.length > 0) {
-					inputFiles.forEach((file) => {
-						console.log(file, file.name.split('.').at(-1));
-						if (['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(file['type'])) {
-							if (visionCapableModels.length === 0) {
-								toast.error($i18n.t('Selected model(s) do not support image inputs'));
-								return;
-							}
+          inputFiles.forEach((file) => {
+            console.log(file, file.name.split('.').at(-1));
+            if (['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(file['type'])) {
+              if (visionCapableModels.length === 0) {
+                // Remove all images from the conversation history
+                files = files.filter(f => f.type !== 'image');
+                return;
+              }
+				
 							let reader = new FileReader();
 							reader.onload = (event) => {
 								files = [

@@ -259,7 +259,6 @@
 						console.log(file, file.name.split('.').at(-1));
 						if (['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(file['type'])) {
 							if (visionCapableModels.length === 0) {
-								inputFiles = null;
 								filesInputElement.value = '';					
 								return;
 							}

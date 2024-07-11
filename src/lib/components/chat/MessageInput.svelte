@@ -89,6 +89,10 @@
 		}
 	}
 
+	$: if (visionCapableModels.length === 0) {
+	files = files.filter(f => f.type !== 'image');
+	}
+
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
 		element.scrollTop = element.scrollHeight;
@@ -255,7 +259,8 @@
 						console.log(file, file.name.split('.').at(-1));
 						if (['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(file['type'])) {
 							if (visionCapableModels.length === 0) {
-								toast.error($i18n.t('Selected model(s) do not support image inputs'));
+								inputFiles = null;
+								filesInputElement.value = '';					
 								return;
 							}
 							let reader = new FileReader();

@@ -364,8 +364,6 @@
 							toast.success($i18n.t('Settings saved successfully!'));
 						}}
 					/>
-				{:else if selectedTab === 'about'}
-					<About />
 				{/if}
 			</div>
 		</div>

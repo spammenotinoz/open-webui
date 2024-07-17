@@ -22,7 +22,6 @@
 	export let sendPrompt: Function;
 	export let continueGeneration: Function;
 	export let regenerateResponse: Function;
-	export let chatActionHandler: Function;
 
 	export let user = $_user;
 	export let prompt;
@@ -336,9 +335,6 @@
 										copyToClipboard={copyToClipboardWithToast}
 										{continueGeneration}
 										{regenerateResponse}
-										on:action={async (e) => {
-											await chatActionHandler(chatId, e.detail, message.model, message.id);
-										}}
 										on:save={async (e) => {
 											console.log('save', e);
 

@@ -425,7 +425,7 @@ export const resetUploadDir = async (token: string) => {
 export const resetVectorDB = async (token: string) => {
 	let error = null;
 
-	const res = await fetch(`${RAG_API_BASE_URL}/reset/db`, {
+	const res = await fetch(`${RAG_API_BASE_URL}/reset`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',

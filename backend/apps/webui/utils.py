@@ -79,8 +79,6 @@ def load_function_module_by_id(function_id):
             return module.Pipe(), "pipe", frontmatter
         elif hasattr(module, "Filter"):
             return module.Filter(), "filter", frontmatter
-        elif hasattr(module, "Action"):
-            return module.Action(), "action", frontmatter
         else:
             raise Exception("No Function class found")
     except Exception as e:

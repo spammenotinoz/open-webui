@@ -1,7 +1,6 @@
 <script lang="ts">
 	export let value: string = '';
 	export let placeholder = '';
-	export let required = true;
 	export let readOnly = false;
 	export let outerClassName = 'flex flex-1';
 	export let inputClassName =
@@ -16,7 +15,7 @@
 		class={inputClassName}
 		{placeholder}
 		bind:value
-		required={required && !readOnly}
+		required={!readOnly}
 		disabled={readOnly}
 		autocomplete="off"
 		{...{ type: show ? 'text' : 'password' }}

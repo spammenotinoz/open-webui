@@ -264,6 +264,8 @@
 			messages: {},
 			currentId: null
 		};
+
+		chatFiles = [];
 		params = {};
 
 		if ($page.url.searchParams.get('models')) {
@@ -770,6 +772,11 @@
 		if (model?.info?.meta?.knowledge ?? false) {
 			files.push(...model.info.meta.knowledge);
 		}
+		if (responseMessage?.files) {
+			files.push(
+				...responseMessage?.files.filter((item) => ['web_search_results'].includes(item.type))
+			);
+		}
 
 		eventTarget.dispatchEvent(
 			new CustomEvent('chat:start', {
@@ -1004,6 +1011,11 @@
 		let files = JSON.parse(JSON.stringify(chatFiles));
 		if (model?.info?.meta?.knowledge ?? false) {
 			files.push(...model.info.meta.knowledge);
+		}
+		if (responseMessage?.files) {
+			files.push(
+				...responseMessage?.files.filter((item) => ['web_search_results'].includes(item.type))
+			);
 		}
 
 		scrollToBottom();

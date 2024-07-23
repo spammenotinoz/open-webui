@@ -33,12 +33,19 @@
 
 	const mapUserToDatabase = async (email) => {
 		const randomPassword = uuidv4();
-		let sessionUser = await userSignIn(email, randomPassword).catch(async (error) => {
-			// If sign-in fails, sign up the user
-			console.log('User does not exist, signing up:', error);
-			await userSignUp(email.split('@')[0], email, randomPassword, '');
-			// Try to sign in the user again after sign up
-			return await userSignIn(email, randomPassword);
+		// First, try to sign in the user
+		let sessionUser = await userSignIn(email, password).catch(async (error) => {
+			// If sign-in fails, check if the user exists or create a new user
+			if (error.status === 400) {
+				toast.error('Invalid credentials');
+			} else if (error.status === 403) {
+				toast.error('You do not have permission to access this resource');
+			} else {
+				console.log('User does not exist, signing up:', error);
+				await userSignUp(email.split('@')[0], email, randomPassword, '');
+				// Try to sign in the user again after sign up
+				return await userSignIn(email, randomPassword);
+			}
 		});
 		return sessionUser;
 	};

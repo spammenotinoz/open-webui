@@ -6,9 +6,8 @@
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { page } from '$app/stores';
 	import { v4 as uuidv4 } from 'uuid';
-	import { userSignIn, userSignUp } from '$lib/apis/auths'; // Import the existing userSignIn and userSignUp functions
+	import { userSignIn, userSignUp, getSessionUser } from '$lib/apis/auths'; // Import the necessary functions
 
 	const i18n = getContext('i18n');
 	const supabase = createClient('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8');
@@ -17,7 +16,8 @@
 	let email = '';
 	let password = '';
 
-	const setSessionUser = async (sessionUser) => {
+	const setSessionUser = async (token) => {
+		const sessionUser = await getSessionUser(token);
 		if (sessionUser) {
 			console.log('Setting session user:', sessionUser);
 			toast.success($i18n.t(`You're now logged in.`));
@@ -33,7 +33,6 @@
 
 	const mapUserToDatabase = async (email) => {
 		const randomPassword = uuidv4();
-		// Try to sign in the user
 		let sessionUser = await userSignIn(email, randomPassword).catch(async (error) => {
 			// If sign-in fails, sign up the user
 			console.log('User does not exist, signing up:', error);
@@ -54,9 +53,10 @@
 			toast.error(error.message);
 		} else {
 			console.log('Supabase sign in data:', data);
+			const token = data.session.access_token;
 			const appUser = await mapUserToDatabase(email);
 			if (appUser) {
-				await setSessionUser(appUser);
+				await setSessionUser(token);
 			}
 		}
 	};

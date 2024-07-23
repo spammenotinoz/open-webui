@@ -1,5 +1,5 @@
-
-    <script>
+	
+<script>
 	import { goto } from '$app/navigation';
 	import { createClient } from '@supabase/supabase-js';
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -8,6 +8,7 @@
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
+	import { v4 as uuidv4 } from 'uuid';
 
 	const i18n = getContext('i18n');
 	const supabase = createClient('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8');
@@ -20,13 +21,54 @@
 		if (sessionUser) {
 			console.log(sessionUser);
 			toast.success($i18n.t(`You're now logged in.`));
-			if (sessionUser.access_token) {
-				localStorage.token = sessionUser.access_token;
+			if (sessionUser.token) {
+				localStorage.token = sessionUser.token;
 			}
 
-			$socket.emit('user-join', { auth: { token: sessionUser.access_token } });
-			await user.set(sessionUser.user);
+			$socket.emit('user-join', { auth: { token: sessionUser.token } });
+			await user.set(sessionUser);
 			goto('/');
+		}
+	};
+
+	const mapUserToDatabase = async (email) => {
+		try {
+			// Check if user exists in your application's database
+			const response = await fetch(`${WEBUI_API_BASE_URL}/check-user`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ email })
+			});
+			const userExists = await response.json();
+
+			// If user does not exist, create a new user with a random password
+			if (!userExists) {
+				const randomPassword = uuidv4();
+				await fetch(`${WEBUI_API_BASE_URL}/create-user`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ email, password: randomPassword })
+				});
+			}
+
+			// Fetch the user from your application's database
+			const userResponse = await fetch(`${WEBUI_API_BASE_URL}/get-user`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ email })
+			});
+			const appUser = await userResponse.json();
+			return appUser;
+		} catch (error) {
+			console.error(error);
+			toast.error($i18n.t('An error occurred while mapping the user.'));
+			return null;
 		}
 	};
 
@@ -38,7 +80,10 @@
 		if (error) {
 			toast.error(error.message);
 		} else {
-			await setSessionUser(data.session);
+			const appUser = await mapUserToDatabase(email);
+			if (appUser) {
+				await setSessionUser(appUser);
+			}
 		}
 	};
 

@@ -8,10 +8,10 @@
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
 	import { v4 as uuidv4 } from 'uuid';
-	import { userSignIn } from '$lib/apis/auths'; // Import the existing userSignIn function
+	import { userSignIn, userSignUp } from '$lib/apis/auths'; // Import the existing userSignIn and userSignUp functions
 
 	const i18n = getContext('i18n');
-	const supabase = createClient('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8');
+	const supabase = createClient('https://your-supabase-url.supabase.co', 'your-anon-key');
 
 	let loaded = false;
 	let email = '';
@@ -33,32 +33,15 @@
 
 	const mapUserToDatabase = async (email) => {
 		const randomPassword = uuidv4();
-		return await userSignIn(email, randomPassword).catch((error) => {
-			// If the user does not exist, create them
-			return fetch(`${WEBUI_API_BASE_URL}/auths/signup`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include',
-				body: JSON.stringify({
-					name: email.split('@')[0], // Assuming name is part of the email
-					email: email,
-					password: randomPassword,
-					profile_image_url: '' // Default or empty profile image URL
-				})
-			})
-				.then(async (res) => {
-					if (!res.ok) throw await res.json();
-					return res.json();
-				})
-				.then(() => userSignIn(email, randomPassword))
-				.catch((err) => {
-					console.log(err);
-					toast.error(err.detail);
-					return null;
-				});
+		// Try to sign in the user
+		let sessionUser = await userSignIn(email, randomPassword).catch(async (error) => {
+			// If sign-in fails, sign up the user
+			console.log('User does not exist, signing up:', error);
+			await userSignUp(email.split('@')[0], email, randomPassword, '');
+			// Try to sign in the user again after sign up
+			return await userSignIn(email, randomPassword);
 		});
+		return sessionUser;
 	};
 
 	const signInHandler = async () => {

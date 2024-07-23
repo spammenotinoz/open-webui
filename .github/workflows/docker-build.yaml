@@ -6,7 +6,8 @@ on:
     branches:
       - main
       - dev
-      - staging     
+      - staging
+      - sb     
     tags:
       - v*
 

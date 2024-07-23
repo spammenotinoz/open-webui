@@ -38,7 +38,9 @@ from constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from config import (
     WEBUI_AUTH,
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
-    WEBUI_AUTH_TRUSTED_NAME_HEADER
+    WEBUI_AUTH_TRUSTED_NAME_HEADER,
+    SUPABASE_URL,
+    SUPABASE_KEY
 )
 
 router = APIRouter()
@@ -132,34 +134,18 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
     password = form_data.password
     
     try:
-        auth_response = supabase.auth.sign_in(email=email, password=password)
-        if auth_response.error:
-            # If user does not exist, create a new user
-            if auth_response.error.message == "Invalid login credentials":
-                new_password = generate_random_password()
-                user_name = email.split("@")[0]
-                signup_response = supabase.auth.sign_up(email=email, password=new_password)
-                if signup_response.error:
-                    raise HTTPException(400, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
-                
-                # Add additional user details if necessary
-                user_id = signup_response.user.id
-                Users.insert_new_user(user_id, email, user_name, role="user")
-                
-                auth_response = supabase.auth.sign_in(email=email, password=new_password)
-                if auth_response.error:
-                    raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
-            else:
-                raise HTTPException(400, detail=auth_response.error.message)
+        auth_response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        if auth_response.get("error"):
+            raise HTTPException(400, detail=auth_response["error"]["message"])
         
-        user_data = auth_response.user
-        user = Users.get_user_by_id(user_data.id)
+        user_data = auth_response["user"]
+        user = Users.get_user_by_email(user_data["email"])
+        
         if not user:
-            user_name = email.split("@")[0]
-            Users.insert_new_user(user_data.id, email, user_name, role="user")
-        
+            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+
         token = create_token(
-            data={"id": user_data.id},
+            data={"id": user.id},
             expires_delta=parse_duration(request.app.state.config.JWT_EXPIRES_IN),
         )
         response.set_cookie(
@@ -171,11 +157,11 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         return {
             "token": token,
             "token_type": "Bearer",
-            "id": user_data.id,
-            "email": user_data.email,
-            "name": user_data.user_metadata.get("name", email.split("@")[0]),
-            "role": user_data.user_metadata.get("role", "user"),
-            "profile_image_url": user_data.user_metadata.get("profile_image_url", ""),
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role,
+            "profile_image_url": user.profile_image_url,
         }
     except Exception as e:
         raise HTTPException(400, detail=str(e))
@@ -201,56 +187,45 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
     try:
-        role = (
-            "admin"
-            if Users.get_num_users() == 0
-            else request.app.state.config.DEFAULT_USER_ROLE
+        new_password = generate_random_password()
+        user_name = form_data.email.split("@")[0]
+        signup_response = supabase.auth.sign_up({"email": form_data.email, "password": new_password})
+        if signup_response.get("error"):
+            raise HTTPException(400, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
+        
+        # Add user to the original database
+        user = Users.insert_new_user(signup_response["user"]["id"], form_data.email, form_data.name, role="user")
+
+        token = create_token(
+            data={"id": user.id},
+            expires_delta=parse_duration(request.app.state.config.JWT_EXPIRES_IN),
         )
-        hashed = get_password_hash(form_data.password)
-        user = Auths.insert_new_auth(
-            form_data.email.lower(),
-            hashed,
-            form_data.name,
-            form_data.profile_image_url,
-            role,
+        response.set_cookie(
+            key="token",
+            value=token,
+            httponly=True,
         )
 
-        if user:
-            token = create_token(
-                data={"id": user.id},
-                expires_delta=parse_duration(request.app.state.config.JWT_EXPIRES_IN),
-            )
-            # response.set_cookie(key='token', value=token, httponly=True)
-
-            # Set the cookie token
-            response.set_cookie(
-                key="token",
-                value=token,
-                httponly=True,  # Ensures the cookie is not accessible via JavaScript
+        if request.app.state.config.WEBHOOK_URL:
+            post_webhook(
+                request.app.state.config.WEBHOOK_URL,
+                WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
+                {
+                    "action": "signup",
+                    "message": WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
+                    "user": user.model_dump_json(exclude_none=True),
+                },
             )
 
-            if request.app.state.config.WEBHOOK_URL:
-                post_webhook(
-                    request.app.state.config.WEBHOOK_URL,
-                    WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
-                    {
-                        "action": "signup",
-                        "message": WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
-                        "user": user.model_dump_json(exclude_none=True),
-                    },
-                )
-
-            return {
-                "token": token,
-                "token_type": "Bearer",
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "role": user.role,
-                "profile_image_url": user.profile_image_url,
-            }
-        else:
-            raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
+        return {
+            "token": token,
+            "token_type": "Bearer",
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role,
+            "profile_image_url": user.profile_image_url,
+        }
     except Exception as err:
         raise HTTPException(500, detail=ERROR_MESSAGES.DEFAULT(err))
 

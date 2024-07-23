@@ -11,7 +11,7 @@
 	import { userSignIn, userSignUp } from '$lib/apis/auths'; // Import the existing userSignIn and userSignUp functions
 
 	const i18n = getContext('i18n');
-	const supabase = createClient('https://your-supabase-url.supabase.co', 'your-anon-key');
+	const supabase = createClient('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8');
 
 	let loaded = false;
 	let email = '';

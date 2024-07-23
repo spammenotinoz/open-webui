@@ -1,4 +1,3 @@
-	
 <script>
 	import { goto } from '$app/navigation';
 	import { createClient } from '@supabase/supabase-js';
@@ -11,7 +10,7 @@
 	import { v4 as uuidv4 } from 'uuid';
 
 	const i18n = getContext('i18n');
-	const supabase = createClient('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8');
+	const supabase = createClient('https://your-supabase-url.supabase.co', 'your-anon-key');
 
 	let loaded = false;
 	let email = '';

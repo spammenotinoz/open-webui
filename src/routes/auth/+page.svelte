@@ -40,10 +40,9 @@
 				},
 				body: JSON.stringify({ email })
 			});
-			const userExists = await response.json();
+			const { exists, user } = await response.json();
 
-			// If user does not exist, create a new user with a random password
-			if (!userExists) {
+			if (!exists) {
 				const randomPassword = uuidv4();
 				await fetch(`${WEBUI_API_BASE_URL}/create-user`, {
 					method: 'POST',
@@ -52,19 +51,9 @@
 					},
 					body: JSON.stringify({ email, password: randomPassword })
 				});
+				return await mapUserToDatabase(email);  // Retry mapping to get the created user
 			}
-
-			// Fetch the user from your application's database
-			const userResponse = await fetch(`${WEBUI_API_BASE_URL}/get-user`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ email })
-			});
-			const appUser = await userResponse.json();
-			console.log('Mapped user:', appUser);
-			return appUser;
+			return user;
 		} catch (error) {
 			console.error(error);
 			toast.error($i18n.t('An error occurred while mapping the user.'));
@@ -104,8 +93,8 @@
 		if ($user !== undefined) {
 			await goto('/');
 		}
-		loaded = true;
 		await checkTrustedHeader();
+		loaded = true;
 	});
 </script>
 
@@ -117,7 +106,12 @@
 	<div class="fixed m-10 z-50">
 		<div class="flex space-x-2">
 			<div class=" self-center">
-				<img crossorigin="anonymous" src="{WEBUI_BASE_URL}/static/favicon.png" class=" w-8 rounded-full" alt="logo" />
+				<img
+					crossorigin="anonymous"
+					src="{WEBUI_BASE_URL}/static/favicon.png"
+					class=" w-8 rounded-full"
+					alt="logo"
+				/>
 			</div>
 		</div>
 	</div>
@@ -126,10 +120,15 @@
 		<div class="w-full sm:max-w-md px-10 min-h-screen flex flex-col text-center">
 			{#if ($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false}
 				<div class=" my-auto pb-10 w-full">
-					<div class="flex items-center justify-center gap-3 text-xl sm:text-2xl text-center font-semibold dark:text-gray-200">
+					<div
+						class="flex items-center justify-center gap-3 text-xl sm:text-2xl text-center font-semibold dark:text-gray-200"
+					>
 						<div>
-							{$i18n.t('Signing in')} {$i18n.t('to')} {$WEBUI_NAME}
+							{$i18n.t('Signing in')}
+							{$i18n.t('to')}
+							{$WEBUI_NAME}
 						</div>
+
 						<div>
 							<Spinner />
 						</div>
@@ -137,10 +136,17 @@
 				</div>
 			{:else}
 				<div class=" my-auto pb-10 w-full dark:text-gray-100">
-					<form class=" flex flex-col justify-center" on:submit|preventDefault={() => { submitHandler(); }}>
+					<form
+						class=" flex flex-col justify-center"
+						on:submit|preventDefault={() => {
+							submitHandler();
+						}}
+					>
 						<div class="mb-1">
 							<div class=" text-2xl font-medium">
-								{$i18n.t('Sign in')} {$i18n.t('to')} {$WEBUI_NAME}
+								{$i18n.t('Sign in')}
+								{$i18n.t('to')}
+								{$WEBUI_NAME}
 							</div>
 						</div>
 
@@ -159,6 +165,7 @@
 
 							<div>
 								<div class=" text-sm font-medium text-left mb-1">{$i18n.t('Password')}</div>
+
 								<input
 									bind:value={password}
 									type="password"
@@ -171,7 +178,10 @@
 						</div>
 
 						<div class="mt-5">
-							<button class=" bg-gray-900 hover:bg-gray-800 w-full rounded-2xl text-white font-medium text-sm py-3 transition" type="submit">
+							<button
+								class=" bg-gray-900 hover:bg-gray-800 w-full rounded-2xl text-white font-medium text-sm py-3 transition"
+								type="submit"
+							>
 								{$i18n.t('Sign in')}
 							</button>
 						</div>
@@ -184,6 +194,8 @@
 
 <style>
 	.font-mona {
-		font-family: 'Mona Sans', -apple-system, 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif, 'Helvetica Neue', Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+		font-family: 'Mona Sans', -apple-system, 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto,
+			Ubuntu, Cantarell, 'Noto Sans', sans-serif, 'Helvetica Neue', Arial, 'Apple Color Emoji',
+			'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 	}
 </style>

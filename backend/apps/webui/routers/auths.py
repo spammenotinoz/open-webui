@@ -3,12 +3,14 @@ import logging
 from fastapi import Request, UploadFile, File
 from fastapi import Depends, HTTPException, status
 from fastapi.responses import Response
-
 from fastapi import APIRouter
 from pydantic import BaseModel
 import re
 import uuid
 import csv
+import random
+import string
+from supabase import create_client, Client
 
 from apps.webui.models.auths import (
     SigninForm,
@@ -37,14 +39,22 @@ from config import (
     WEBUI_AUTH,
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
+    SUPABASE_URL,
+    SUPABASE_KEY
 )
 
 router = APIRouter()
 
+# Supabase client initialization
+supabase: Client = create_client ('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8')
+
+def generate_random_password(length: int = 12) -> str:
+    characters = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(random.choice(characters) for _ in range(length))
+
 ############################
 # GetSessionUser
 ############################
-
 
 @router.get("/", response_model=UserResponse)
 async def get_session_user(
@@ -75,7 +85,6 @@ async def get_session_user(
 # Update Profile
 ############################
 
-
 @router.post("/update/profile", response_model=UserResponse)
 async def update_profile(
     form_data: UpdateProfileForm, session_user=Depends(get_current_user)
@@ -96,7 +105,6 @@ async def update_profile(
 ############################
 # Update Password
 ############################
-
 
 @router.post("/update/password", response_model=bool)
 async def update_password(
@@ -120,78 +128,64 @@ async def update_password(
 # SignIn
 ############################
 
-
 @router.post("/signin", response_model=SigninResponse)
 async def signin(request: Request, response: Response, form_data: SigninForm):
-    if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
-        if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:
-            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_TRUSTED_HEADER)
-
-        trusted_email = request.headers[WEBUI_AUTH_TRUSTED_EMAIL_HEADER].lower()
-        trusted_name = trusted_email
-        if WEBUI_AUTH_TRUSTED_NAME_HEADER:
-            trusted_name = request.headers.get(
-                WEBUI_AUTH_TRUSTED_NAME_HEADER, trusted_email
-            )
-        if not Users.get_user_by_email(trusted_email.lower()):
-            await signup(
-                request,
-                response,
-                SignupForm(
-                    email=trusted_email, password=str(uuid.uuid4()), name=trusted_name
-                ),
-            )
-        user = Auths.authenticate_user_by_trusted_header(trusted_email)
-    elif WEBUI_AUTH == False:
-        admin_email = "admin@localhost"
-        admin_password = "admin"
-
-        if Users.get_user_by_email(admin_email.lower()):
-            user = Auths.authenticate_user(admin_email.lower(), admin_password)
-        else:
-            if Users.get_num_users() != 0:
-                raise HTTPException(400, detail=ERROR_MESSAGES.EXISTING_USERS)
-
-            await signup(
-                request,
-                response,
-                SignupForm(email=admin_email, password=admin_password, name="User"),
-            )
-
-            user = Auths.authenticate_user(admin_email.lower(), admin_password)
-    else:
-        user = Auths.authenticate_user(form_data.email.lower(), form_data.password)
-
-    if user:
+    email = form_data.email.lower()
+    password = form_data.password
+    
+    try:
+        auth_response = supabase.auth.sign_in(email=email, password=password)
+        if auth_response.error:
+            # If user does not exist, create a new user
+            if auth_response.error.message == "Invalid login credentials":
+                new_password = generate_random_password()
+                user_name = email.split("@")[0]
+                signup_response = supabase.auth.sign_up(email=email, password=new_password)
+                if signup_response.error:
+                    raise HTTPException(400, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
+                
+                # Add additional user details if necessary
+                user_id = signup_response.user.id
+                Users.insert_new_user(user_id, email, user_name, role="user")
+                
+                auth_response = supabase.auth.sign_in(email=email, password=new_password)
+                if auth_response.error:
+                    raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+            else:
+                raise HTTPException(400, detail=auth_response.error.message)
+        
+        user_data = auth_response.user
+        user = Users.get_user_by_id(user_data.id)
+        if not user:
+            user_name = email.split("@")[0]
+            Users.insert_new_user(user_data.id, email, user_name, role="user")
+        
         token = create_token(
-            data={"id": user.id},
+            data={"id": user_data.id},
             expires_delta=parse_duration(request.app.state.config.JWT_EXPIRES_IN),
         )
-
-        # Set the cookie token
         response.set_cookie(
             key="token",
             value=token,
-            httponly=True,  # Ensures the cookie is not accessible via JavaScript
+            httponly=True,
         )
 
         return {
             "token": token,
             "token_type": "Bearer",
-            "id": user.id,
-            "email": user.email,
-            "name": user.name,
-            "role": user.role,
-            "profile_image_url": user.profile_image_url,
+            "id": user_data.id,
+            "email": user_data.email,
+            "name": user_data.user_metadata.get("name", email.split("@")[0]),
+            "role": user_data.user_metadata.get("role", "user"),
+            "profile_image_url": user_data.user_metadata.get("profile_image_url", ""),
         }
-    else:
-        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+    except Exception as e:
+        raise HTTPException(400, detail=str(e))
 
 
 ############################
 # SignUp
 ############################
-
 
 @router.post("/signup", response_model=SigninResponse)
 async def signup(request: Request, response: Response, form_data: SignupForm):
@@ -267,7 +261,6 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
 # AddUser
 ############################
 
-
 @router.post("/add", response_model=SigninResponse)
 async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
 
@@ -280,7 +273,6 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
     try:
-
         print(form_data)
         hashed = get_password_hash(form_data.password)
         user = Auths.insert_new_auth(
@@ -312,7 +304,6 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
 # GetAdminDetails
 ############################
 
-
 @router.get("/admin/details")
 async def get_admin_details(request: Request, user=Depends(get_current_user)):
     if request.app.state.config.SHOW_ADMIN_DETAILS:
@@ -343,7 +334,6 @@ async def get_admin_details(request: Request, user=Depends(get_current_user)):
 # ToggleSignUp
 ############################
 
-
 @router.get("/admin/config")
 async def get_admin_config(request: Request, user=Depends(get_admin_user)):
     return {
@@ -354,14 +344,12 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ENABLE_COMMUNITY_SHARING": request.app.state.config.ENABLE_COMMUNITY_SHARING,
     }
 
-
 class AdminConfig(BaseModel):
     SHOW_ADMIN_DETAILS: bool
     ENABLE_SIGNUP: bool
     DEFAULT_USER_ROLE: str
     JWT_EXPIRES_IN: str
     ENABLE_COMMUNITY_SHARING: bool
-
 
 @router.post("/admin/config")
 async def update_admin_config(
@@ -396,7 +384,6 @@ async def update_admin_config(
 # API Key
 ############################
 
-
 # create api key
 @router.post("/api_key", response_model=ApiKey)
 async def create_api_key_(user=Depends(get_current_user)):
@@ -409,13 +396,11 @@ async def create_api_key_(user=Depends(get_current_user)):
     else:
         raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_API_KEY_ERROR)
 
-
 # delete api key
 @router.delete("/api_key", response_model=bool)
 async def delete_api_key(user=Depends(get_current_user)):
     success = Users.update_user_api_key_by_id(user.id, None)
     return success
-
 
 # get api key
 @router.get("/api_key", response_model=ApiKey)

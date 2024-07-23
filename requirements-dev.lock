@@ -10,7 +10,7 @@
 #   universal: false
 
 -e file:.
-supabase==1.2.0
+supabase==2.5.3
 aiohttp==3.9.5
     # via langchain
     # via langchain-community

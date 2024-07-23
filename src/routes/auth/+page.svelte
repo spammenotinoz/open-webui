@@ -10,7 +10,7 @@
 	import { v4 as uuidv4 } from 'uuid';
 
 	const i18n = getContext('i18n');
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8'; 
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8';
 
 	let loaded = false;
 	let email = '';
@@ -18,14 +18,14 @@
 
 	const setSessionUser = async (sessionUser) => {
 		if (sessionUser) {
-			console.log(sessionUser);
+			console.log('Setting session user:', sessionUser);
 			toast.success($i18n.t(`You're now logged in.`));
 			if (sessionUser.token) {
 				localStorage.token = sessionUser.token;
 			}
 
 			$socket.emit('user-join', { auth: { token: sessionUser.token } });
-			await user.set(sessionUser);
+			user.set(sessionUser);
 			goto('/');
 		}
 	};
@@ -63,6 +63,7 @@
 				body: JSON.stringify({ email })
 			});
 			const appUser = await userResponse.json();
+			console.log('Mapped user:', appUser);
 			return appUser;
 		} catch (error) {
 			console.error(error);
@@ -72,6 +73,7 @@
 	};
 
 	const signInHandler = async () => {
+		console.log('Signing in with:', email, password);
 		const { data, error } = await supabase.auth.signInWithPassword({
 			email,
 			password
@@ -79,6 +81,7 @@
 		if (error) {
 			toast.error(error.message);
 		} else {
+			console.log('Supabase sign in data:', data);
 			const appUser = await mapUserToDatabase(email);
 			if (appUser) {
 				await setSessionUser(appUser);
@@ -87,6 +90,7 @@
 	};
 
 	const submitHandler = async () => {
+		console.log('Submitting form');
 		await signInHandler();
 	};
 

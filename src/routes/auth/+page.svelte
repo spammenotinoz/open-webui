@@ -21,16 +21,15 @@
     let password = '';
 
     const setSessionUser = async (session) => {
-        if (session) {
+        if (session && session.access_token) {
             console.log(session);
             toast.success($i18n.t(`You're now logged in.`));
-            if (session.access_token) {
-                localStorage.token = session.access_token;
-            }
-
+            localStorage.token = session.access_token;
             $socket.emit('user-join', { auth: { token: session.access_token } });
             await user.set(session.user);
             goto('/');
+        } else {
+            toast.error($i18n.t('Failed to set session user.'));
         }
     };
 

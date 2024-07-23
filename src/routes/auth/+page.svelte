@@ -2,34 +2,31 @@
     import { goto } from '$app/navigation';
     import Spinner from '$lib/components/common/Spinner.svelte';
     import { WEBUI_NAME, config, user, socket } from '$lib/stores';
-    import { onMount, getContext } from 'svelte';
+    import { onMount } from 'svelte';
     import { toast } from 'svelte-sonner';
-    import { page } from '$app/stores';
-    import { createClient } from '@supabase/supabase-js'
+    import { createClient } from '@supabase/supabase-js';
 
     const supabaseUrl = 'https://anrakdaroezxddxvdpaw.supabase.co';
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8'; // Update with your actual key
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8'; 
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    const i18n = getContext('i18n');
-
     let loaded = false;
-    let mode = 'signin';
-
+    let mode = 'signin';  
     let email = '';
     let password = '';
 
     const setSessionUser = async (session) => {
-        if (session && session.access_token) {
+        if (session) {
             console.log(session);
-            toast.success($i18n.t(`You're now logged in.`));
-            localStorage.token = session.access_token;
-            $socket.emit('user-join', { auth: { token: session.access_token } });
+            toast.success('You\'re now logged in.');
+            if (session.access_token) {
+                localStorage.token = session.access_token;
+            }
+
+            socket.emit('user-join', { auth: { token: session.access_token } });
             await user.set(session.user);
             goto('/');
-        } else {
-            toast.error($i18n.t('Failed to set session user.'));
         }
     };
 
@@ -49,48 +46,24 @@
         }
     };
 
-    const signUpHandler = async () => {
-        try {
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password
-            });
-            if (error) {
-                toast.error(error.message);
-                return;
-            }
-            if (data.session) {
-                await setSessionUser(data.session);
-            } else {
-                toast.success($i18n.t('Check your email for the confirmation link.'));
-            }
-        } catch (error) {
-            toast.error(error.message);
-        }
-    };
-
     const submitHandler = async () => {
         if (mode === 'signin') {
             await signInHandler();
-        } else {
-            await signUpHandler();
         }
     };
 
     onMount(async () => {
-        if ($user !== undefined) {
-            await goto('/');
+        // Check if the user is already logged in
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (session) {
+            await setSessionUser(session);
         }
-        loaded = true;
-        if (($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false) {
-            // Handle trusted header or skip sign-in logic if necessary
-            // Adjust this section as needed for your application flow
-        }
+        loaded = true; // Ensure the loading state is updated
     });
 </script>
 
 <svelte:head>
-    <title>{`${$WEBUI_NAME}`}</title>
+    <title>{`${WEBUI_NAME}`}</title>
 </svelte:head>
 
 {#if loaded}
@@ -109,90 +82,54 @@
 
     <div class="bg-white dark:bg-gray-950 min-h-screen w-full flex justify-center font-primary">
         <div class="w-full sm:max-w-md px-10 min-h-screen flex flex-col text-center">
-            {#if ($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false}
-                <div class="my-auto pb-10 w-full">
-                    <div class="flex items-center justify-center gap-3 text-xl sm:text-2xl text-center font-semibold dark:text-gray-200">
-                        <div>
-                            {$i18n.t('Signing in')}
-                            {$i18n.t('to')}
-                            {$WEBUI_NAME}
-                        </div>
-                        <div>
-                            <Spinner />
+            <div class="my-auto pb-10 w-full dark:text-gray-100">
+                <form
+                    class="flex flex-col justify-center"
+                    on:submit|preventDefault={() => {
+                        submitHandler();
+                    }}
+                >
+                    <div class="mb-1">
+                        <div class="text-2xl font-medium">
+                            {mode === 'signin' ? 'Sign in' : 'Create Account'} 
+                            to {WEBUI_NAME}
                         </div>
                     </div>
-                </div>
-            {:else}
-                <div class="my-auto pb-10 w-full dark:text-gray-100">
-                    <form
-                        class="flex flex-col justify-center"
-                        on:submit|preventDefault={() => {
-                            submitHandler();
-                        }}
-                    >
-                        <div class="mb-1">
-                            <div class="text-2xl font-medium">
-                                {mode === 'signin' ? $i18n.t('Sign in') : $i18n.t('Sign up')}
-                                {$i18n.t('to')}
-                                {$WEBUI_NAME}
-                            </div>
+                    <div class="flex flex-col mt-4">
+                        <div class="mb-2">
+                            <div class="text-sm font-medium text-left mb-1">Email</div>
+                            <input
+                                bind:value={email}
+                                type="email"
+                                class="px-5 py-3 rounded-2xl w-full text-sm outline-none border dark:border-none dark:bg-gray-900"
+                                autocomplete="email"
+                                placeholder="Enter Your Email"
+                                required
+                            />
                         </div>
-
-                        <div class="flex flex-col mt-4">
-                            <div class="mb-2">
-                                <div class="text-sm font-medium text-left mb-1">{$i18n.t('Email')}</div>
-                                <input
-                                    bind:value={email}
-                                    type="email"
-                                    class="px-5 py-3 rounded-2xl w-full text-sm outline-none border dark:border-none dark:bg-gray-900"
-                                    autocomplete="email"
-                                    placeholder={$i18n.t('Enter Your Email')}
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <div class="text-sm font-medium text-left mb-1">{$i18n.t('Password')}</div>
-                                <input
-                                    bind:value={password}
-                                    type="password"
-                                    class="px-5 py-3 rounded-2xl w-full text-sm outline-none border dark:border-none dark:bg-gray-900"
-                                    placeholder={$i18n.t('Enter Your Password')}
-                                    autocomplete="current-password"
-                                    required
-                                />
-                            </div>
+                        <div>
+                            <div class="text-sm font-medium text-left mb-1">Password</div>
+                            <input
+                                bind:value={password}
+                                type="password"
+                                class="px-5 py-3 rounded-2xl w-full text-sm outline-none border dark:border-none dark:bg-gray-900"
+                                placeholder="Enter Your Password"
+                                autocomplete="current-password"
+                                required
+                            />
                         </div>
+                    </div>
 
-                        <div class="mt-5">
-                            <button
-                                class="bg-gray-900 hover:bg-gray-800 w-full rounded-2xl text-white font-medium text-sm py-3 transition"
-                                type="submit"
-                            >
-                                {mode === 'signin' ? $i18n.t('Sign in') : $i18n.t('Create Account')}
-                            </button>
-
-                            {#if $config?.features.enable_signup}
-                                <div class="mt-4 text-sm text-center">
-                                    {mode === 'signin'
-                                        ? $i18n.t("Don't have an account?")
-                                        : $i18n.t('Already have an account?')}
-
-                                    <button
-                                        class="font-medium underline"
-                                        type="button"
-                                        on:click={() => {
-                                            mode = (mode === 'signin') ? 'signup' : 'signin';
-                                        }}
-                                    >
-                                        {mode === 'signin' ? $i18n.t('Sign up') : $i18n.t('Sign in')}
-                                    </button>
-                                </div>
-                            {/if}
-                        </div>
-                    </form>
-                </div>
-            {/if}
+                    <div class="mt-5">
+                        <button
+                            class="bg-gray-900 hover:bg-gray-800 w-full rounded-2xl text-white font-medium text-sm py-3 transition"
+                            type="submit"
+                        >
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 {/if}
@@ -200,7 +137,7 @@
 <style>
     .font-mona {
         font-family: 'Mona Sans', -apple-system, 'Inter', ui-sans-serif, system-ui, 'Segoe UI', 
-        Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif,'Helvetica Neue', Arial, 
+        Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif, 'Helvetica Neue', Arial, 
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     }
 </style>

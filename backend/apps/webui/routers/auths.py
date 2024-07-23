@@ -10,7 +10,7 @@ import uuid
 import csv
 import random
 import string
-from supabase import create_client, Client
+from supabase import create_client, Client, AuthApiError
 
 from apps.webui.models.auths import (
     SigninForm,
@@ -44,7 +44,7 @@ from config import (
 router = APIRouter()
 
 # Supabase client initialization
-supabase: Client = create_client ('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8')
+supabase: Client = create_client('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8')
 
 def generate_random_password(length: int = 12) -> str:
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -133,11 +133,11 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
     
     try:
         auth_response = supabase.auth.sign_in_with_password({"email": email, "password": password})
-        if auth_response.get("error"):
-            raise HTTPException(400, detail=auth_response["error"]["message"])
+        if auth_response.error:
+            raise HTTPException(400, detail=auth_response.error.message)
         
-        user_data = auth_response["user"]
-        user = Users.get_user_by_email(user_data["email"])
+        user_data = auth_response.user
+        user = Users.get_user_by_email(user_data.email)
         
         if not user:
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
@@ -161,7 +161,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             "role": user.role,
             "profile_image_url": user.profile_image_url,
         }
-    except Exception as e:
+    except AuthApiError as e:
         raise HTTPException(400, detail=str(e))
 
 
@@ -188,11 +188,11 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
         new_password = generate_random_password()
         user_name = form_data.email.split("@")[0]
         signup_response = supabase.auth.sign_up({"email": form_data.email, "password": new_password})
-        if signup_response.get("error"):
-            raise HTTPException(400, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
+        if signup_response.error:
+            raise HTTPException(400, detail=signup_response.error.message)
         
         # Add user to the original database
-        user = Users.insert_new_user(signup_response["user"]["id"], form_data.email, form_data.name, role="user")
+        user = Users.insert_new_user(signup_response.user.id, form_data.email, form_data.name, role="user")
 
         token = create_token(
             data={"id": user.id},
@@ -224,8 +224,8 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             "role": user.role,
             "profile_image_url": user.profile_image_url,
         }
-    except Exception as err:
-        raise HTTPException(500, detail=ERROR_MESSAGES.DEFAULT(err))
+    except AuthApiError as err:
+        raise HTTPException(500, detail=str(err))
 
 
 ############################

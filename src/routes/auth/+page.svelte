@@ -10,7 +10,7 @@
 	import { v4 as uuidv4 } from 'uuid';
 
 	const i18n = getContext('i18n');
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8'; 	const supabase = createClient('https://your-supabase-url.supabase.co', 'your-anon-key');
 
 	let loaded = false;
 	let email = '';
@@ -25,7 +25,7 @@
 			}
 
 			$socket.emit('user-join', { auth: { token: sessionUser.token } });
-			user.set(sessionUser);
+			await user.set(sessionUser);
 			goto('/');
 		}
 	};
@@ -94,14 +94,19 @@
 		await signInHandler();
 	};
 
+	const checkTrustedHeader = async () => {
+		if (($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false) {
+			await signInHandler();
+		}
+	};
+
 	onMount(async () => {
 		if ($user !== undefined) {
 			await goto('/');
 		}
+		await checkOauthCallback();
+		await checkTrustedHeader();
 		loaded = true;
-		if (($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false) {
-			await signInHandler();
-		}
 	});
 </script>
 
@@ -142,7 +147,7 @@
 					</div>
 				</div>
 			{:else}
-				<div class="  my-auto pb-10 w-full dark:text-gray-100">
+				<div class=" my-auto pb-10 w-full dark:text-gray-100">
 					<form
 						class=" flex flex-col justify-center"
 						on:submit|preventDefault={() => {

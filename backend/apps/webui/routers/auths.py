@@ -1,6 +1,7 @@
 import logging
 import random
 import string
+import os
 from supabase import create_client, Client
 
 from fastapi import Request, UploadFile, File
@@ -43,7 +44,15 @@ from config import (
 )
 
 router = APIRouter()
-supabase: Client = create_client('https://anrakdaroezxddxvdpaw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucmFrZGFyb2V6eGRkeHZkcGF3Iiwicm9sIjoImFub24iLCJpYXQiOjE3MDc5NjIzNTEsImV4cCI6MjAyMzUzODM1MX0.zLZm6AI7gfZlzkseKNQNC6Ek_eDhruR6gnzl1Otk1F8')
+
+# Supabase client initialization
+supabase_url = os.environ.get("SUPABASE_URL")
+supabase_anon_key = os.environ.get("SUPABASE_ANON_KEY")
+
+if not supabase_url or not supabase_anon_key:
+    raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables")
+
+supabase: Client = create_client(supabase_url, supabase_anon_key)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -124,8 +133,14 @@ async def update_password(
 @router.post("/signin", response_model=SigninResponse)
 async def signin(request: Request, response: Response, form_data: SigninForm):
     try:
+        logger.info(f"Attempting to sign in user: {form_data.email}")
+        logger.info(f"Supabase URL: {supabase_url}")
+        logger.info(f"Supabase Anon Key (first 10 chars): {supabase_anon_key[:10]}...")
+        
         # Authenticate with Supabase
         user = supabase.auth.sign_in_with_password({"email": form_data.email, "password": form_data.password})
+        
+        logger.info(f"Sign-in successful for user: {form_data.email}")
         
         if user:
             # Check if user exists in our database
@@ -172,7 +187,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
     except Exception as e:
         logger.error(f"Error during signin: {str(e)}")
-        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+        raise HTTPException(400, detail=f"Authentication failed: {str(e)}")
 
 ############################
 # SignUp

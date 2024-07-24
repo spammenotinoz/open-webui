@@ -155,7 +155,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
                     form_data.email.lower(),
                     hashed_password,
                     name,
-                    None,  # profile_image_url
+                    "",  # profile_image_url
                     "user"  # default role
                 )
                 

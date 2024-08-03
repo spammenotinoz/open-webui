@@ -88,12 +88,10 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 
 WEBUI_NAME = os.environ.get("WEBUI_NAME", "Smart Chat")
-if WEBUI_NAME != "Open WebUI":
-    WEBUI_NAME += " (Open WebUI)"
 
 WEBUI_URL = os.environ.get("WEBUI_URL", "http://localhost:3000")
 
-WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
+WEBUI_FAVICON_URL = "https://cdn.oaistatic.com/_next/static/media/apple-touch-icon.82af6fe1.png"
 
 
 ####################################

@@ -87,7 +87,7 @@ class EndpointFilter(logging.Filter):
 logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 
-WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
+WEBUI_NAME = os.environ.get("WEBUI_NAME", "Smart Chat")
 if WEBUI_NAME != "Open WebUI":
     WEBUI_NAME += " (Open WebUI)"
 

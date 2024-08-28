@@ -54,12 +54,6 @@
 			<hr class="my-2 border-gray-100 dark:border-gray-800" />
 		{/if}
 
-		<Collapsible title={$i18n.t('Valves')}>
-			<div class="text-sm mt-1.5" slot="content">
-				<Valves />
-			</div>
-		</Collapsible>
-
 		<hr class="my-2 border-gray-100 dark:border-gray-800" />
 
 		<Collapsible title={$i18n.t('System Prompt')} open={true}>

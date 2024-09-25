@@ -788,11 +788,11 @@
 					);
 
 					if (hasImages && !(model.info?.meta?.capabilities?.vision ?? true)) {
-						
-											
-							files = files.filter(f => f.type !== 'image');
-
-						
+						toast.error(
+							$i18n.t('Model {{modelName}} is not vision capable', {
+								modelName: model.name ?? model.id
+							})
+						);
 					}
 
 					let responseMessageId =

@@ -1,221 +1,133 @@
 <script lang="ts">
-  import { toast } from 'svelte-sonner';
-  import dayjs from 'dayjs';
+	import { toast } from 'svelte-sonner';
 
-  import { createEventDispatcher } from 'svelte';
-  import { onMount, tick, getContext } from 'svelte';
+	import { createEventDispatcher, onMount, getContext } from 'svelte';
 
-  const i18n = getContext<Writable<i18nType>>('i18n');
+	const i18n = getContext('i18n');
 
-  const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher();
 
-  import { config, models, settings, user } from '$lib/stores';
-  import { synthesizeOpenAISpeech } from '$lib/apis/audio';
-  import { imageGenerations } from '$lib/apis/images';
-  import {
-    copyToClipboard as _copyToClipboard,
-    approximateToHumanReadable,
-    extractParagraphsForAudio,
-    extractSentencesForAudio,
-    cleanText,
-    getMessageContentParts
-  } from '$lib/utils';
-  import { WEBUI_BASE_URL } from '$lib/constants';
+	export let message;
+	export let show = false;
 
-  import Name from './Name.svelte';
-  import ProfileImage from './ProfileImage.svelte';
-  import Skeleton from './Skeleton.svelte';
-  import Image from '$lib/components/common/Image.svelte';
-  import Tooltip from '$lib/components/common/Tooltip.svelte';
-  import RateComment from './RateComment.svelte';
-  import Spinner from '$lib/components/common/Spinner.svelte';
-  import WebSearchResults from './ResponseMessage/WebSearchResults.svelte';
-  import Sparkles from '$lib/components/icons/Sparkles.svelte';
-  import Markdown from './Markdown.svelte';
-  import Error from './Error.svelte';
-  import Citations from './Citations.svelte';
+	let LIKE_REASONS = [];
+	let DISLIKE_REASONS = [];
 
-  import type { Writable } from 'svelte/store';
-  import type { i18n as i18nType } from 'i18next';
+	function loadReasons() {
+		LIKE_REASONS = [
+			$i18n.t('Accurate information'),
+			$i18n.t('Followed instructions perfectly'),
+			$i18n.t('Showcased creativity'),
+			$i18n.t('Positive attitude'),
+			$i18n.t('Attention to detail'),
+			$i18n.t('Thorough explanation'),
+			$i18n.t('Other')
+		];
 
-  interface MessageType {
-    // ... (message type definition)
-  }
+		DISLIKE_REASONS = [
+			$i18n.t("Don't like the style"),
+			$i18n.t('Not factually correct'),
+			$i18n.t("Didn't fully follow instructions"),
+			$i18n.t("Refused when it shouldn't have"),
+			$i18n.t('Being lazy'),
+			$i18n.t('Other')
+		];
+	}
 
-  export let history;
-  export let messageId;
+	let reasons = [];
+	let selectedReason = null;
+	let comment = '';
 
-  let message: MessageType = JSON.parse(JSON.stringify(history.messages[messageId]));
-  $: if (history.messages) {
-    if (JSON.stringify(message) !== JSON.stringify(history.messages[messageId])) {
-      message = JSON.parse(JSON.stringify(history.messages[messageId]));
-    }
-  }
+	$: if (message?.annotation?.rating === 1) {
+		reasons = LIKE_REASONS;
+	} else if (message?.annotation?.rating === -1) {
+		reasons = DISLIKE_REASONS;
+	}
 
-  export let siblings;
+	onMount(() => {
+		selectedReason = message?.annotation?.reason ?? '';
+		comment = message?.annotation?.comment ?? '';
+		loadReasons();
+	});
 
-  export let showPreviousMessage: Function;
-  export let showNextMessage: Function;
+	const submitHandler = () => {
+		console.log('submitHandler');
 
-  export let editMessage: Function;
-  export let rateMessage: Function;
+		if (!selectedReason) {
+			toast.error($i18n.t('Please select a reason'));
+			return;
+		}
 
-  export let continueResponse: Function;
-  export let regenerateResponse: Function;
+		dispatch('submit', {
+			reason: selectedReason,
+			comment: comment
+		});
 
-  export let isLastMessage = true;
-  export let readOnly = false;
-
-  let model = null;
-  $: model = $models.find((m) => m.id === message.model);
-
-  let edit = false;
-  let editedContent = '';
-  let editTextAreaElement: HTMLTextAreaElement;
-
-  let audioParts: Record<number, HTMLAudioElement | null> = {};
-  let speaking = false;
-  let speakingIdx: number | undefined;
-
-  let loadingSpeech = false;
-  let generatingImage = false;
-
-  let showRateComment = false;
-
-  const copyToClipboard = async (text) => {
-    const res = await _copyToClipboard(text);
-    if (res) {
-      toast.success($i18n.t('Copying to clipboard was successful!'));
-    }
-  };
-
-  // ... (other function definitions)
-
-  const generateImage = async (message: MessageType) => {
-    generatingImage = true;
-    try {
-      const res = await imageGenerations(localStorage.token, message.content);
-      if (res) {
-        const files = res.map((image) => ({
-          type: 'image',
-          url: `${image.url}`
-        }));
-        dispatch('save', { ...message, files: files });
-      }
-    } catch (error) {
-      toast.error(error);
-    } finally {
-      generatingImage = false;
-    }
-  };
-
-  $: if (!edit) {
-    (async () => {
-      await tick();
-    })();
-  }
-
-  onMount(async () => {
-    console.log('ResponseMessage mounted');
-    await tick();
-  });
+		toast.success($i18n.t('Thanks for your feedback!'));
+		show = false;
+	};
 </script>
 
-{#key message.id}
-  <div
-    class=" flex w-full message-{message.id}"
-    id="message-{message.id}"
-    dir={$settings.chatDirection}
-  >
-    <ProfileImage
-      src={model?.info?.meta?.profile_image_url ??
-        ($i18n.language === 'dg-DG' ? `/doge.png` : `${WEBUI_BASE_URL}/static/favicon.png`)}
-    />
+<div
+	class=" my-2.5 rounded-xl px-4 py-3 border dark:border-gray-850"
+	id="message-feedback-{message.id}"
+>
+	<div class="flex justify-between items-center">
+		<div class=" text-sm">{$i18n.t('Tell us more:')}</div>
 
-    <div class="w-full overflow-hidden pl-1">
-      <Name>
-        {model?.name ?? message.model}
+		<button
+			on:click={() => {
+				show = false;
+			}}
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke-width="1.5"
+				stroke="currentColor"
+				class="size-4"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+			</svg>
+		</button>
+	</div>
 
-        {#if message.timestamp}
-          <span
-            class=" self-center invisible group-hover:visible text-gray-400 text-xs font-medium uppercase ml-0.5 -mt-0.5"
-          >
-            {dayjs(message.timestamp * 1000).format($i18n.t('h:mm a'))}
-          </span>
-        {/if}
-      </Name>
+	{#if reasons.length > 0}
+		<div class="flex flex-wrap gap-2 text-sm mt-2.5">
+			{#each reasons as reason}
+				<button
+					class="px-3.5 py-1 border dark:border-gray-850 hover:bg-gray-100 dark:hover:bg-gray-850 {selectedReason ===
+					reason
+						? 'bg-gray-200 dark:bg-gray-800'
+						: ''} transition rounded-lg"
+					on:click={() => {
+						selectedReason = reason;
+					}}
+				>
+					{reason}
+				</button>
+			{/each}
+		</div>
+	{/if}
 
-      <div>
-        {#if message?.files && message.files?.filter((f) => f.type === 'image').length > 0}
-          <div class="my-2.5 w-full flex overflow-x-auto gap-2 flex-wrap">
-            {#each message.files as file}
-              <div>
-                {#if file.type === 'image'}
-                  <Image src={file.url} alt={message.content} />
-                {/if}
-              </div>
-            {/each}
-          </div>
-        {/if}
+	<div class="mt-2">
+		<textarea
+			bind:value={comment}
+			class="w-full text-sm px-1 py-2 bg-transparent outline-none resize-none rounded-xl"
+			placeholder={$i18n.t('Feel free to add specific details')}
+			rows="2"
+		/>
+	</div>
 
-        <div class="chat-{message.role} w-full min-w-full markdown-prose">
-          {#if (message?.statusHistory ?? [...(message?.status ? [message?.status] : [])]).length > 0}
-            {/* ... (status handling code) */}
-          {/if}
-
-          {#if edit === true}
-            {/* ... (edit mode code) */}
-          {:else}
-            <div class="w-full flex flex-col">
-              {#if message.content === '' && !message.error}
-                <Skeleton />
-              {:else if message.content && message.error !== true}
-                <Markdown id={message.id} content={message.content} {model} />
-              {/if}
-
-              {#if message.error}
-                <Error content={message?.error?.content ?? message.content} />
-              {/if}
-
-              {#if message.citations}
-                <Citations citations={message.citations} />
-              {/if}
-            </div>
-          {/if}
-        </div>
-
-        {#if !edit}
-          {#if message.done || siblings.length > 1}
-            <div
-              class=" flex justify-start overflow-x-auto buttons text-gray-600 dark:text-gray-500 mt-0.5"
-            >
-              {/* ... (buttons code) */}
-            </div>
-          {/if}
-
-          {#if message.done && showRateComment}
-            <RateComment
-              bind:message
-              bind:show={showRateComment}
-              on:submit={(e) => {
-                dispatch('save', {
-                  ...message,
-                  annotation: {
-                    ...message.annotation,
-                    comment: e.detail.comment,
-                    reason: e.detail.reason
-                  }
-                });
-                // ... (action dispatch code)
-              }}
-            />
-          {/if}
-        {/if}
-      </div>
-    </div>
-  </div>
-{/key}
-
-<style>
-  /* ... (styles) */
-</style>
+	<div class="mt-2 flex justify-end">
+		<button
+			class=" bg-emerald-700 text-white text-sm font-medium rounded-lg px-3.5 py-1.5"
+			on:click={() => {
+				submitHandler();
+			}}
+		>
+			{$i18n.t('Submit')}
+		</button>
+	</div>
+</div>

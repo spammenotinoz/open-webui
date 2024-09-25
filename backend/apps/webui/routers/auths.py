@@ -129,22 +129,20 @@ async def update_password(
 ############################
 # SignIn
 ############################
-
 @router.post("/signin", response_model=SigninResponse)
 async def signin(request: Request, response: Response, form_data: SigninForm):
     try:
         logger.info(f"Attempting to sign in user: {form_data.email}")
-        logger.info(f"Supabase URL: {supabase_url}")
-        logger.info(f"Supabase Anon Key (first 10 chars): {supabase_anon_key[:10]}...")
         
         # Authenticate with Supabase
         user = supabase.auth.sign_in_with_password({"email": form_data.email, "password": form_data.password})
         
-        logger.info(f"Sign-in successful for user: {form_data.email}")
-        
-        if user:
-            # Check if user exists in our database
+        if user and user['user']:  # Ensure the returned user is valid
+            logger.info(f"Sign-in successful for user: {form_data.email}")
+
+            # Check if user exists in the application database
             db_user = Users.get_user_by_email(form_data.email.lower())
+
             if not db_user:
                 # Create user in our database
                 name = form_data.email.split('@')[0]  # Use email prefix as name
@@ -161,7 +159,10 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
                 
                 if not db_user:
                     raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
-            
+
+                logger.info(f"User created successfully in the application database: {db_user.email}")
+
+            # Create token for application
             token = create_token(
                 data={"id": db_user.id},
                 expires_delta=parse_duration(request.app.state.config.JWT_EXPIRES_IN),

@@ -723,29 +723,28 @@
                                 {#if prompt === ''}
                                     <div class=" flex items-center mb-1">
                                         <Tooltip content={$i18n.t('Call')}>
-<button
-    class="text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850 transition rounded-full p-2 self-center"
-    type="button"
-    on:click={async () => {
-        // **Modified Call Button Handler**
+                                            <button
+                                                class=" text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850 transition rounded-full p-2 self-center"
+                                                type="button"
+                                                on:click={async () => {
+                                                    // **Modified Call Button Handler**
+                                                    // Check if the first message exists and contains the instruction
+                                                    const messagesArray = history.messages ? Object.values(history.messages) : [];
+                                                    const firstMessageContent = messagesArray.length > 0 ? messagesArray[0]?.content : null;
 
-        // Convert messages to an array and sort them if necessary
-        const messagesArray = history.messages ? Object.values(history.messages) : [];
-        const firstMessageContent = messagesArray.length > 0 ? messagesArray[0]?.content : null;
+                                                    if (!firstMessageContent || !firstMessageContent.includes(instructionText)) {
+                                                        // Add the instruction as the first message
+                                                        await createMessagePair(instructionText);
+                                                    }
 
-        if (!firstMessageContent || !firstMessageContent.includes(instructionText)) {
-            // Add the instruction as a system message
-            await createSystemMessage(instructionText);
-        }
-
-        // Proceed with initiating the call
-        showCallOverlay.set(true);
-        showControls.set(true);
-    }}
-    aria-label="Call"
->
-    <Headphone className="size-6" />
-</button>
+                                                    // Proceed with initiating the call
+                                                    showCallOverlay.set(true);
+                                                    showControls.set(true);
+                                                }}
+                                                aria-label="Call"
+                                            >
+                                                <Headphone className="size-6" />
+                                            </button>
                                         </Tooltip>
                                     </div>
                                 {:else}

@@ -184,36 +184,6 @@
 				<div class=" self-center">{$i18n.t('Sign Out')}</div>
 			</button>
 
-			{#if $activeUserCount}
-				<hr class=" border-gray-50 dark:border-gray-850 my-1 p-0" />
-
-				<Tooltip
-					content={$USAGE_POOL && $USAGE_POOL.length > 0
-						? `${$i18n.t('Running')}: ${$USAGE_POOL.join(', ')} ✨`
-						: ''}
-				>
-					<div class="flex rounded-md py-1.5 px-3 text-xs gap-2.5 items-center">
-						<div class=" flex items-center">
-							<span class="relative flex size-2">
-								<span
-									class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
-								/>
-								<span class="relative inline-flex rounded-full size-2 bg-green-500" />
-							</span>
-						</div>
-
-						<div class=" ">
-							<span class="">
-								{$i18n.t('Active Users')}:
-							</span>
-							<span class=" font-semibold">
-								{$activeUserCount}
-							</span>
-						</div>
-					</div>
-				</Tooltip>
-			{/if}
-
 			<!-- <DropdownMenu.Item class="flex items-center px-3 py-2 text-sm ">
 				<div class="flex items-center">Profile</div>
 			</DropdownMenu.Item> -->

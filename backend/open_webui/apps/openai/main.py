@@ -175,7 +175,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
 
         except Exception as e:
             log.exception(e)
-            error_detail = "Open WebUI: Server Connection Error"
+            error_detail = "Server Connection Error"
             if r is not None:
                 try:
                     res = r.json()
@@ -406,7 +406,7 @@ async def get_models(url_idx: Optional[int] = None, user=Depends(get_verified_us
                 log.exception(f"Client error: {str(e)}")
                 # Handle aiohttp-specific connection issues, timeout etc.
                 raise HTTPException(
-                    status_code=500, detail="Open WebUI: Server Connection Error"
+                    status_code=500, detail="Server Connection Error"
                 )
             except Exception as e:
                 log.exception(f"Unexpected error: {e}")

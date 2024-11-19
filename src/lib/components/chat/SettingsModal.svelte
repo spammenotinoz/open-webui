@@ -267,6 +267,8 @@
 				'details',
 				'aboutus',
 				'softwareinfo',
+				'timothyjaeryangbaek',
+				'openwebui',
 				'release',
 				'updates',
 				'updateinfo',
@@ -562,7 +564,8 @@
 										/>
 									</svg>
 								</div>
-								</button>
+								<div class=" self-center">{$i18n.t('About')}</div>
+							</button>
 						{:else if tabId === 'admin'}
 							{#if $user.role === 'admin'}
 								<button

@@ -101,7 +101,7 @@ log.setLevel(SRC_LOG_LEVELS["CONFIG"])
 
 WEBUI_NAME = os.environ.get("WEBUI_NAME", "Chat")
 
-WEBUI_URL = os.environ.get("WEBUI_URL", "https://chat.ultimateai.org/)
+WEBUI_URL = os.environ.get("WEBUI_URL", "https://chat.ultimateai.org")
 
 WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
 

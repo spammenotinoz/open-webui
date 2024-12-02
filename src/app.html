@@ -73,7 +73,7 @@
 			})();
 		</script>
 
-		<title>Ultimate Chat</title>
+		<title>Chat</title>
 
 		%sveltekit.head%
 	</head>
@@ -93,6 +93,7 @@
 
 			<img
 				id="logo"
+				class="no-invert"
 				style="
 					position: absolute;
 					width: auto;
@@ -120,6 +121,7 @@
 			>
 				<img
 					id="logo-her"
+					class="no-invert"
 					style="width: auto; height: 13rem"
 					src="/static/splash.png"
 					class="animate-pulse-fast"
@@ -172,7 +174,7 @@
 		background: #000;
 	}
 
-	html.dark #splash-screen img {
+	html.dark #splash-screen img:not(.no-invert) {
 		filter: invert(1);
 	}
 

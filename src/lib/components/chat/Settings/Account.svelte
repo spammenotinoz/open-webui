@@ -247,6 +247,17 @@
 		</div>
 
 		{#if showAPIKeys}
+			<div class="flex flex-col gap-4">
+				<div class="justify-between w-full">
+					<div class="flex justify-between w-full">
+						
+					</div>
+
+					<div class="flex mt-2">
+						<SensitiveInput value={localStorage.token} readOnly={true} />
+
+					</div>
+				</div>
 				{#if $config?.features?.enable_api_key ?? true}
 					<div class="justify-between w-full">
 						<div class="flex justify-between w-full">

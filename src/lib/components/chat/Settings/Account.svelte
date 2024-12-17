@@ -253,10 +253,7 @@
 						
 					</div>
 
-					<div class="flex mt-2">
-						<SensitiveInput value={localStorage.token} readOnly={true} />
-
-					</div>
+					
 				</div>
 				{#if $config?.features?.enable_api_key ?? true}
 					<div class="justify-between w-full">

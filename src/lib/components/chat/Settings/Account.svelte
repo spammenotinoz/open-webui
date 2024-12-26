@@ -241,10 +241,7 @@
 
 			
 		</div>
-
-
-		<hr class=" dark:border-gray-850 my-4" />	
-		
+	
 		
 		
 		

@@ -256,10 +256,6 @@
 			</div>
 		</div>
 
-		<div class="py-0.5">
-			<UpdatePassword />
-		</div>
-
 		<hr class=" dark:border-gray-850 my-4" />	
 		
 		

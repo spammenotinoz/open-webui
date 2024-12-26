@@ -101,7 +101,7 @@ log.setLevel(SRC_LOG_LEVELS["CONFIG"])
 
 WEBUI_NAME = "UltimateAI"
 
-WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
+WEBUI_FAVICON_URL = "https://new.ultimateai.org/favicon.png"
 
 
 ####################################

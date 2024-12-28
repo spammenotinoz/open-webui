@@ -265,23 +265,28 @@ class Pipe:
 	};
 
 	const submitHandler = async () => {
-		if (codeEditor) {
-			content = _content;
-			await tick();
+    if (codeEditor) {
+        // Store the original content
+        const originalContent = _content;
+        
+        // Format the code
+        content = originalContent;
+        await tick();
+        const res = await codeEditor.formatPythonCodeHandler();
+        await tick();
+        
+        // Check if the formatted content has unwanted trailing commas
+        if (res) {
+            // Remove any trailing commas in dictionary definitions
+            _content = _content.replace(/,(\s*})/g, '$1');
+            content = _content;
+            await tick();
+            console.log('Code formatted successfully');
+            saveHandler();
+        }
+    }
+};
 
-			const res = await codeEditor.formatPythonCodeHandler();
-			await tick();
-
-			content = _content;
-			await tick();
-
-			if (res) {
-				console.log('Code formatted successfully');
-
-				saveHandler();
-			}
-		}
-	};
 </script>
 
 <div class=" flex flex-col justify-between w-full overflow-y-auto h-full">
